@@ -18,7 +18,7 @@ public class AttractionDAO {
     public List<Attraction> getNearbyAttractions(int hotelId) {
         List<Attraction> attractionList = new ArrayList<>();
 
-        // 다대다 관계 해소를 위한 JOIN 쿼리
+        // 다대다 관계 처리를 위한 JOIN 쿼리
         String sql = "SELECT a.attraction_id, a.attraction_name, a.a_description "
                 + "FROM Attraction a "
                 + "JOIN Hotel_Attraction ha ON a.attraction_id = ha.attraction_id "

@@ -80,7 +80,7 @@ public class RoomDAO {
     public boolean checkRoomAvailability(int roomNumber, LocalDate checkIn, LocalDate checkOut) {
         boolean isAvailable = false;
 
-        // 겹치는 일정이 있는지 확인 (COUNT가 0이면 예약 가능)
+        // 겹치는 일정이 있는지 확인
         String sql = "SELECT COUNT(*) FROM Reservation "
                 + "WHERE room_number = ? "
                 + "AND check_out > ? AND check_in < ?";

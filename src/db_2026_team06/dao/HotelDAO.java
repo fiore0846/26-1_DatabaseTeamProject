@@ -35,7 +35,7 @@ public class HotelDAO {
             if (hasLocation) sql.append("AND ");
             else sql.append("WHERE ");
 
-            // Reservation 테이블에 해당 기간이 없는(NOT IN) 방을 가진 호텔만 필터링
+            // Reservation 테이블에 해당 기간이 없는 방을 가진 호텔만 필터링
             sql.append("h.hotel_id IN (")
                     .append("  SELECT r.hotel_id FROM Room r ")
                     .append("  WHERE r.capacity >= ? ")
