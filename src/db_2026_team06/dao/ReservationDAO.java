@@ -19,17 +19,14 @@ public class ReservationDAO {
 		
 		try {
 			Connection conn = DBConnection.getConnection();
-			PreparedStatement pstmt1 = conn.prepareStatement(sql);
-			pstmt1.setInt(1, roomId);
-			pstmt1.setDate(2, Date.valueOf(checkOut));
-			pstmt1.setDate(3, Date.valueOf(checkIn));
+			PreparedStatement pstmt = conn.prepareStatement(sql);
+			pstmt.setInt(1, roomId);
+			pstmt.setDate(2, Date.valueOf(checkOut));
+			pstmt.setDate(3, Date.valueOf(checkIn));
 			
-			ResultSet rs1 = pstmt1.executeQuery();
-			
-			PreparedStatement pstmt2 = conn.prepareStatement("SELECT COUNT(*) FROM vReservation");
-			ResultSet rs2 = pstmt2.executeQuery();
-			rs2.next();
-			return rs2.getInt(1) == 0; //0이면 예약 가능 -> true 반환
+			ResultSet rs = pstmt.executeQuery();
+			rs.next();
+			return rs.getInt(1) == 0; //0이면 예약 가능 -> true 반환
 		} catch (SQLException e){
 			System.out.println("DB연결 실패하거나, SQL문이 틀렸습니다.");
 			System.out.print("사유 : " + e.getMessage());
