@@ -6,7 +6,7 @@ import db_2026_team06.model.Room;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.time.format.DateTimeFormatter;
+import java.util.Random;
 
 public class ReservationService {
 	
@@ -30,7 +30,8 @@ public class ReservationService {
 		}
 		// 3. 예약 생성
 		LocalDate reservationDate = LocalDate.now();
-		int reservation_id = Integer.parseInt(reservationDate.format(DateTimeFormatter.BASIC_ISO_DATE));
+		Random random = new Random();
+		int reservation_id = random.nextInt(100);
 		Reservation reservation = new Reservation(reservation_id, checkIn, checkOut, reservationDate, guests, roomNumber, customerId);
 		return reservationDAO.createReservation(reservation);
 	}
