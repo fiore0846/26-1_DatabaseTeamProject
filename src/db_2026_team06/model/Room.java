@@ -1,4 +1,4 @@
-package DB2026Team06.model;
+package db_2026_team06.model;
 
 public class Room {
 	private int room_number;
