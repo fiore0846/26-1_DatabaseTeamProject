@@ -2,13 +2,19 @@ package db_2026_team06.service;
 
 import db_2026_team06.dao.ReservationDAO;
 import db_2026_team06.model.Reservation;
+import db_2026_team06.model.Room;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.time.format.DateTimeFormatter;
 
 public class ReservationService {
 	
 	private ReservationDAO reservationDAO = new ReservationDAO();
+
+	public List<Room> getRoomList() throws Exception {
+		return reservationDAO.showRoomInfo();
+	}
 	
 	public boolean createReservation(int customerId, int roomNumber, int guests, LocalDate checkIn, LocalDate checkOut) throws Exception {
 		// 1. 날짜 유효성 검사
