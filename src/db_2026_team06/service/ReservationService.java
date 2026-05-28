@@ -30,7 +30,7 @@ public class ReservationService {
 		}
 		// 3. 예약 생성
 		LocalDate reservationDate = LocalDate.now();
-		Random random = new Random();
+		Random random = new Random(); //수정 필요
 		int reservation_id = random.nextInt(100);
 		Reservation reservation = new Reservation(reservation_id, checkIn, checkOut, reservationDate, guests, roomNumber, customerId);
 		return reservationDAO.createReservation(reservation);
@@ -38,9 +38,5 @@ public class ReservationService {
 	
 	public boolean cancelReservation(int reservationId) throws Exception {
 		return reservationDAO.cancelReservation(reservationId);
-	}
-	
-	public boolean checkAvailability(int roomId, LocalDate checkIn, LocalDate checkOut) throws Exception {
-		return reservationDAO.checkAvailability(roomId, checkIn, checkOut);
 	}
 }
