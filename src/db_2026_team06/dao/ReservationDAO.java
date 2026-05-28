@@ -84,7 +84,7 @@ public class ReservationDAO {
 	
 	// 예약 취소 (UPDATE)
 	public boolean cancelReservation(int reservationId) throws Exception {
-		String sql = "UPDATE Reservation SET status = 'cancelled' WHERE reservation_id = ?";
+		String sql = "DELETE FROM Reservation WHERE reservation_id = ?";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
