@@ -25,8 +25,15 @@ public class HotelDetailMenu {
             System.out.println("0. 뒤로가기");
             System.out.print("선택: ");
 
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            int choice = -1;
+            try {
+                choice = scanner.nextInt();
+                scanner.nextLine(); // 버퍼 비우기
+            } catch (Exception e) {
+                System.out.println("숫자만 입력해주세요.");
+                scanner.nextLine(); // 잘못된 입력값 제거
+                continue;
+            }
 
             if (choice == 1) {
                 // 해당 호텔의 룸 목록 출력
@@ -50,6 +57,7 @@ public class HotelDetailMenu {
     // 호텔 기본 정보 출력
     private void printHotelDetail(int hotelId) {
         Hotel hotel = hotelService.getHotelDetail(hotelId);
+        List<db_2026_team06.model.Attraction> attractions = hotelService.getNearbyAttractions(hotelId);
 
         System.out.println("\n===== 호텔 기본 정보 =====");
 
@@ -64,8 +72,18 @@ public class HotelDetailMenu {
         System.out.println("호텔명: " + hotel.getHotelName());
         System.out.println("위치: " + hotel.getLocation());
         System.out.println("전화번호: " + hotel.getContact());
-        System.out.printf("평점: %.1f%n", avgRating););
+        System.out.printf("평점: %.1f%n", avgRating);
         System.out.println("설명: " + hotel.getHDescription());
+
+        System.out.print("주변 관광지: ");
+        if (attractions == null || attractions.isEmpty()) {
+            System.out.println("없음");
+        } else {
+            for (db_2026_team06.model.Attraction a : attractions) {
+                System.out.print("[" + a.getAttractionName() + "] ");
+            }
+            System.out.println();
+        }//호텔을 검색 시 주위 관광지 정보 추가
     }
 
     // 해당 호텔의 룸 목록 출력
