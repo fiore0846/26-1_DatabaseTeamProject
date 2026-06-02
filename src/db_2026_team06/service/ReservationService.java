@@ -6,7 +6,6 @@ import db_2026_team06.model.Room;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Random;
 
 public class ReservationService {
 	
@@ -14,6 +13,25 @@ public class ReservationService {
 
 	public List<Room> getRoomList() throws Exception {
 		return reservationDAO.showRoomInfo();
+	}
+	
+	public boolean setReservation(String name, String phone, String email, int roomId, int guests, String checkIn, String checkOut) throws Exception {
+		int customerId = reservationDAO.checkInCustomer(name, phone, email);
+		System.out.println(customerId); //확인 후 삭제
+		LocalDate checkInDate = LocalDate.parse(checkIn);
+		LocalDate checkOutDate = LocalDate.parse(checkOut);
+		if (customerId != 0) {
+			boolean result = createReservation(customerId, roomId, guests, checkInDate, checkOutDate);
+			if (result) {
+				System.out.println("예약이 완료되었습니다.");
+			} else {
+				System.out.println("예약에 실패하였습니다.");
+			}
+			return result;
+		} else {
+			System.out.println("고객 정보를 찾을 수 없습니다. 이름을 다시 확인해주세요.");
+			return false;
+		}
 	}
 	
 	public boolean createReservation(int customerId, int roomNumber, int guests, LocalDate checkIn, LocalDate checkOut) throws Exception {
@@ -30,10 +48,13 @@ public class ReservationService {
 		}
 		// 3. 예약 생성
 		LocalDate reservationDate = LocalDate.now();
-		Random random = new Random(); //수정 필요
-		int reservation_id = random.nextInt(100);
+		int reservation_id = reservationDAO.getReservationId();
 		Reservation reservation = new Reservation(reservation_id, checkIn, checkOut, reservationDate, guests, roomNumber, customerId);
 		return reservationDAO.createReservation(reservation);
+	}
+	
+	public boolean viewReservation(int customerId) throws Exception {
+		return reservationDAO.viewReservation(customerId);
 	}
 	
 	public boolean cancelReservation(int reservationId) throws Exception {

@@ -9,7 +9,8 @@ public class DBConnection {
     private static Connection connection = null;
 
     // 데이터베이스 접속 정보 상수 정의
-    private static final String URL = "jdbc:mysql://localhost:3306/DB2026Team06?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true";
+    private static final String URL = "jdbc:mysql://localhost:3306/DB2026Team06"
+    		+ "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&useUnicode=true";
     private static final String USER = "DB2026Team06";
     private static final String PASSWORD = "DB2026Team06";
 

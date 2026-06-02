@@ -5,7 +5,7 @@ FLUSH PRIVILEGES;
 
 -- 데이터베이스 생성 및 선택
 DROP DATABASE IF EXISTS DB2026Team06;
-CREATE DATABASE DB2026Team06;
+CREATE DATABASE DB2026Team06;-- DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci; -- 인코딩 명시
 USE DB2026Team06;
 
 -- 1. Hotel 테이블 생성
@@ -85,10 +85,59 @@ SELECT
     r.hotel_id
 FROM Room r;
 
--- 테스트용 데이터 추가
-INSERT INTO Hotel VALUES (1, 'EWHA Hotel', 'EWHA', '02-1234-5678', 'EWHA');
-INSERT INTO Room VALUES (101, 'standard', 50000, 2, 1);
-INSERT INTO Room VALUES (102, 'standard', 60000, 3, 1);
-INSERT INTO Room VALUES (201, 'deluxe', 100000, 2, 1);
-INSERT INTO Customer (customer_id, name, email, phone) VALUES
-(123, '홍길동', 'hong@example.com', '010-1234-5678');
+-- 초기 데이터
+INSERT INTO Hotel VALUES
+(1, '서울 스카이 호텔', '서울 강남구', '02-1111-1111', '도심 비즈니스 호텔'),
+(2, '부산 오션 호텔', '부산 해운대구', '051-2222-2222', '해변 전망 호텔'),
+(3, '제주 리조트', '제주시 애월읍', '064-3333-3333', '휴양형 리조트');
+
+INSERT INTO Room VALUES
+(101, 'Standard', 120000, 2, 1),
+(102, 'Deluxe', 180000, 3, 1),
+(103, 'Suite', 280000, 4, 1),
+
+(201, 'Standard', 130000, 2, 2),
+(202, 'Deluxe', 200000, 3, 2),
+(203, 'Suite', 320000, 4, 2),
+
+(301, 'Standard', 140000, 2, 3),
+(302, 'Family', 260000, 5, 3);
+
+INSERT INTO Customer VALUES
+(1, '김민준', 'minjun@gmail.com', '010-1111-1111'),
+(2, '박서연', 'seoyeon@gmail.com', '010-2222-2222'),
+(3, '이도윤', 'doyoon@gmail.com', '010-3333-3333'),
+(4, '최지우', 'jiwoo@gmail.com', '010-4444-4444'),
+(5, '정하은', 'haeun@gmail.com', '010-5555-5555'),
+(6, '한지민', 'jimin@gmail.com', '010-6666-6666'),
+(7, '윤서준', 'seojun@gmail.com', '010-7777-7777'),
+(8, '강민서', 'minseo@gmail.com', '010-8888-8888');
+
+INSERT INTO Reservation VALUES
+(1,'2026-06-10','2026-06-12','2026-05-29',2,101,1),
+(2,'2026-06-15','2026-06-18','2026-05-28',3,102,2),
+(3,'2026-06-20','2026-06-22','2026-05-25',2,201,3),
+(4,'2026-07-01','2026-07-03','2026-05-30',4,203,4),
+(5,'2026-07-05','2026-07-07','2026-05-27',2,301,5),
+(6,'2026-07-10','2026-07-13','2026-05-26',5,302,6),
+(7,'2026-08-01','2026-08-03','2026-05-20',2,103,7),
+(8,'2026-08-15','2026-08-18','2026-05-18',3,202,8);
+
+INSERT INTO Attraction VALUES
+(1, '경복궁', '서울 대표 관광지'),
+(2, '해운대 해수욕장', '부산 대표 해변'),
+(3, '성산일출봉', '제주 대표 관광지'),
+(4, '남산타워', '서울 야경 명소');
+
+INSERT INTO Hotel_Attraction VALUES
+(1,1),
+(1,4),
+(2,2),
+(3,3);
+
+INSERT INTO Review VALUES
+(1,5,'2026-05-10','객실이 매우 깨끗했습니다.',1,1),
+(2,4,'2026-05-12','위치가 좋아요.',2,2),
+(3,5,'2026-05-15','바다 전망이 훌륭합니다.',2,3),
+(4,4,'2026-05-18','조용해서 좋았습니다.',3,4),
+(5,5,'2026-05-20','가족 여행에 추천합니다.',3,5);
