@@ -57,6 +57,7 @@ public class AuthGUI extends JFrame {
         JButton loginButton = new JButton("로그인");
         JButton toRegButton = new JButton("회원가입");
         JButton toChgButton = new JButton("비밀번호 변경");
+        JButton toExploreButton = new JButton("호텔 탐색 화면으로");
 
         panel.add(titleLabel);
         panel.add(new JLabel("이메일 주소:"));
@@ -64,15 +65,24 @@ public class AuthGUI extends JFrame {
         panel.add(new JLabel("비밀번호:"));
         panel.add(loginPasswordField);
 
-        JPanel btnPanel = new JPanel(new GridLayout(1, 3, 5, 5));
+        // 4개의 버튼을 배치하기 위해 2x2 그리드로 레이아웃 설정
+        JPanel btnPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         btnPanel.add(loginButton);
         btnPanel.add(toRegButton);
         btnPanel.add(toChgButton);
+        btnPanel.add(toExploreButton);
         panel.add(btnPanel);
 
         loginButton.addActionListener(e -> handleLogin());
         toRegButton.addActionListener(e -> cardLayout.show(mainPanel, "Register"));
         toChgButton.addActionListener(e -> cardLayout.show(mainPanel, "ChangePassword"));
+
+        // 비회원 상태(null)로 메인 프레임을 호출하여 탐색 화면으로 이동
+        toExploreButton.addActionListener(e -> {
+            MainFrame mainFrame = new MainFrame(null);
+            mainFrame.setVisible(true);
+            this.dispose();
+        });
 
         return panel;
     }

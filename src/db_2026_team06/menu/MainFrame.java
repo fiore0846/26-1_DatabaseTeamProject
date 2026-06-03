@@ -1,6 +1,7 @@
 package db_2026_team06.menu;
 
 import db_2026_team06.model.Customer;
+import db_2026_team06.service.ReservationService;
 import db_2026_team06.util.DBConnection;
 
 import javax.swing.*;
@@ -10,51 +11,95 @@ import java.awt.event.WindowEvent;
 
 /**
  * 데이터베이스 응용프로그램 메인 프레임
- * 카드 레이아웃으로 [호텔 탐색 화면] ↔ [예약 화면] 전환을 관리합니다.
+ * JTabbedPane(탭)을 활용하여 [호텔 탐색] ↔ [마이페이지]를 이동하고,
+ * 예약 시에는 카드 레이아웃으로 [예약 화면]을 띄웁니다.
  */
 public class MainFrame extends JFrame {
 
-    private static final String SCREEN_EXPLORE     = "EXPLORE";
+    // 화면 구분을 위한 상수
+    private static final String SCREEN_MAIN        = "MAIN_TABS";
     private static final String SCREEN_RESERVATION = "RESERVATION";
 
     private final CardLayout        cardLayout;
     private final JPanel            cardPanel;
+    private final JTabbedPane       mainTabs; // [추가] 메인 화면용 탭
+
     private final HotelExplorePanel explorePanel;
     private final ReservationPanel  reservationPanel;
+    private final MyPagePanel       myPagePanel;
 
-    // 로그인 화면에서 인증을 마친 사용자 객체를 주입받아 메인 프레임을 초기화합니다.
+    private final ReservationService reservationService;
+    private Customer loggedInCustomer;
+
     public MainFrame(Customer loggedInCustomer) {
+        this.loggedInCustomer = loggedInCustomer;
+
         setTitle("호텔 선택 및 예약 프로그램 - DB2026Team06");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(1050, 680));
 
+        reservationService = new ReservationService();
+
+        // ── 패널 초기화 ───────────────────────────────────────────────
         cardLayout       = new CardLayout();
         cardPanel        = new JPanel(cardLayout);
+
+        // 팀원의 디자인을 차용한 메인 탭 생성
+        mainTabs         = new JTabbedPane();
+        mainTabs.setFont(new Font("맑은 고딕", Font.BOLD, 15));
+        mainTabs.setBackground(Color.WHITE);
+        UIManager.put("TabbedPane.selected", new Color(220, 236, 250)); // 선택된 탭 색상 (연한 파란색)
+
         explorePanel     = new HotelExplorePanel();
         reservationPanel = new ReservationPanel();
+        myPagePanel      = new MyPagePanel(reservationService);
 
+        // 로그인 정보 주입
         explorePanel.setLoggedInCustomer(loggedInCustomer);
-
-        // 메인 프레임이 전달받은 세션 정보를 예약 패널로 넘겨주어 고객 정보가 자동으로 채워지게 합니다.
         reservationPanel.setLoggedInCustomer(loggedInCustomer);
 
-        // ── 화면 등록 ─────────────────────────────────────────────────
-        cardPanel.add(explorePanel,     SCREEN_EXPLORE);
+        // ── 탭에 화면 등록 ────────────────────────────────────────────
+        mainTabs.addTab("   호텔 탐색   ", explorePanel);
+        mainTabs.addTab("   마이페이지   ", myPagePanel);
+
+        // 마이페이지 탭을 클릭했을 때의 동작 설정
+        mainTabs.addChangeListener(e -> {
+            if (mainTabs.getSelectedIndex() == 1) { // 1번 탭(마이페이지)을 눌렀을 때
+                if (this.loggedInCustomer == null) {
+                    JOptionPane.showMessageDialog(this, "로그인이 필요합니다.", "안내", JOptionPane.WARNING_MESSAGE);
+                    mainTabs.setSelectedIndex(0); // 로그인이 안 되어있으면 다시 탐색 탭으로 튕겨냄
+                } else {
+                    // 로그인이 되어있다면 최신 예약 정보를 불러옴
+                    myPagePanel.setLoggedInCustomer(this.loggedInCustomer);
+                }
+            }
+        });
+
+        // ── 카드 레이아웃에 등록 ──────────────────────────────────────
+        // 구조: 카드 1장 = (탐색+마이페이지 탭) / 카드 2장 = (예약화면)
+        cardPanel.add(mainTabs,         SCREEN_MAIN);
         cardPanel.add(reservationPanel, SCREEN_RESERVATION);
 
-        // ── 화면 전환 연결 ────────────────────────────────────────────
-        // 호텔 탐색 → 예약 화면: 예약하기 버튼 클릭 시
+        // ── 화면 전환 로직 연결 ───────────────────────────────────────
+        // 1. 호텔 탐색 → 예약 화면 진입
         explorePanel.setReservationListener(hotelId -> {
             reservationPanel.setTargetHotel(hotelId);
             showScreen(SCREEN_RESERVATION);
         });
 
-        // 예약 화면 → 호텔 탐색: 뒤로가기 버튼 클릭 시
-        reservationPanel.setBackListener(() -> showScreen(SCREEN_EXPLORE));
+        // 2. 예약 화면에서 뒤로가기 클릭 시 → 다시 탭 화면으로 복귀
+        reservationPanel.setBackListener(() -> showScreen(SCREEN_MAIN));
+
+        // 3. 예약 완료 시 → 마이페이지 탭으로 강제 이동!
+        reservationPanel.setReservationSuccessListener(() -> {
+            myPagePanel.setLoggedInCustomer(this.loggedInCustomer);
+            mainTabs.setSelectedIndex(1); // 마이페이지 탭으로 강제 전환
+            showScreen(SCREEN_MAIN);      // 탭 화면 보여주기
+        });
 
         add(cardPanel, BorderLayout.CENTER);
 
-        // 창 닫기 시 DB 연결 안전 종료
+        // ── 창 닫기 처리 ──────────────────────────────────────────────
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -66,21 +111,18 @@ public class MainFrame extends JFrame {
 
         pack();
         setLocationRelativeTo(null);
-        showScreen(SCREEN_EXPLORE);
+        showScreen(SCREEN_MAIN);
     }
 
     public void showScreen(String screenName) {
         cardLayout.show(cardPanel, screenName);
     }
 
-    // 단독 실행 및 UI 디자인 테스트용 메인 메서드입니다.
-    // 실제 프로그램 구동 시에는 AuthGUI를 거쳐 MainFrame이 호출됩니다.
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) { /* 기본 LAF 사용 */ }
 
-        // 테스트 시에는 로그인 정보가 없으므로 임시로 null을 전달합니다.
         SwingUtilities.invokeLater(() -> new MainFrame(null).setVisible(true));
     }
 }

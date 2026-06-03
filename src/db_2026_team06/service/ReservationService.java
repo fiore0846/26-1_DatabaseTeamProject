@@ -93,4 +93,11 @@ public class ReservationService {
         long nights = checkOut.toEpochDay() - checkIn.toEpochDay();
         return (int)(nights * pricePerNight);
     }
+
+    /**
+     * [GUI 마이페이지용] 특정 고객의 예약 내역 목록을 반환합니다.
+     */
+    public List<String[]> getReservationsByCustomerId(int customerId) {
+        return reservationDAO.findReservationsByCustomerId(customerId);
+    }
 }

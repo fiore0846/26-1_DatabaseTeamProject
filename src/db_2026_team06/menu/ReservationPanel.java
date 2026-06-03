@@ -50,14 +50,12 @@ public class ReservationPanel extends JPanel {
     private JTextField tfEmail;
     private JTextField tfPhone;
 
-    // ── 예약 관리 컴포넌트 (수정/취소) ──────────────────────────────
-    private JTextField tfReservationId;
-
     // ── 결과 표시 영역 ───────────────────────────────────────────────
     private JTextArea taResult;
 
-    // 뒤로가기 콜백
+    // 화면 전환 콜백
     private Runnable backListener;
+    private Runnable reservationSuccessListener;
 
     public ReservationPanel() {
         this.reservationService = new ReservationService();
@@ -73,8 +71,8 @@ public class ReservationPanel extends JPanel {
     private void initComponents() {
         // 상단 타이틀 + 뒤로가기
         add(buildTopBar(),    BorderLayout.NORTH);
-        // 중앙: 탭으로 예약생성 / 예약관리 구분
-        add(buildMainTabs(),  BorderLayout.CENTER);
+        // 중앙: 예약 생성 화면
+        add(buildCreateTab(), BorderLayout.CENTER);
     }
 
     /** 상단 타이틀 바 */
@@ -100,17 +98,8 @@ public class ReservationPanel extends JPanel {
         return bar;
     }
 
-    /** 예약 생성 / 예약 관리 탭 */
-    private JTabbedPane buildMainTabs() {
-        JTabbedPane tabs = new JTabbedPane();
-        tabs.setFont(new Font("맑은 고딕", Font.BOLD, 13));
-        tabs.addTab("예약 생성", buildCreateTab());
-        tabs.addTab("예약 수정 / 취소", buildManageTab());
-        return tabs;
-    }
-
     // ────────────────────────────────────────────────────────────────────
-    // 탭 1: 예약 생성
+    // 예약 생성 화면 구성
     // ────────────────────────────────────────────────────────────────────
 
     private JPanel buildCreateTab() {
@@ -228,86 +217,13 @@ public class ReservationPanel extends JPanel {
         JScrollPane resultSp = new JScrollPane(taResult);
         resultSp.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(180,180,180)),
-                "예약 결과", 0, 0,
+                "예약 대기 상태", 0, 0,
                 new Font("맑은 고딕", Font.BOLD, 12)));
 
         panel.add(inputPanel, BorderLayout.NORTH);
         panel.add(resultSp,   BorderLayout.CENTER);
         return panel;
     }
-
-    // ────────────────────────────────────────────────────────────────────
-    // 탭 2: 예약 수정 / 취소
-    // ────────────────────────────────────────────────────────────────────
-
-    private JPanel buildManageTab() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        GridBagConstraints g = new GridBagConstraints();
-        g.insets  = new Insets(8, 8, 8, 8);
-        g.anchor  = GridBagConstraints.WEST;
-        g.fill    = GridBagConstraints.HORIZONTAL;
-
-        Font lf = new Font("맑은 고딕", Font.BOLD,  12);
-        Font vf = new Font("맑은 고딕", Font.PLAIN, 12);
-
-        // 예약 ID
-        g.gridx=0; g.gridy=0; panel.add(lbl("예약 ID", lf), g);
-        g.gridx=1; g.gridwidth=3;
-        tfReservationId = new JTextField(10); tfReservationId.setFont(vf);
-        panel.add(tfReservationId, g);
-
-        // 새 체크인
-        g.gridwidth=1;
-        g.gridx=0; g.gridy=1; panel.add(lbl("새 체크인 (YYYY-MM-DD)", lf), g);
-        g.gridx=1; JTextField tfNewCheckIn = new JTextField(12); tfNewCheckIn.setFont(vf);
-        panel.add(tfNewCheckIn, g);
-
-        // 새 체크아웃
-        g.gridx=2; panel.add(lbl("새 체크아웃 (YYYY-MM-DD)", lf), g);
-        g.gridx=3; JTextField tfNewCheckOut = new JTextField(12); tfNewCheckOut.setFont(vf);
-        panel.add(tfNewCheckOut, g);
-
-        // 새 인원
-        g.gridx=0; g.gridy=2; panel.add(lbl("새 인원", lf), g);
-        g.gridx=1; JSpinner spNewGuests = new JSpinner(new SpinnerNumberModel(1,1,10,1));
-        spNewGuests.setFont(vf); panel.add(spNewGuests, g);
-
-        // 수정 버튼
-        g.gridx=2; g.gridy=2;
-        JButton btnUpdate = makeBtn("예약 수정", new Color(50,120,220));
-        btnUpdate.addActionListener(e ->
-                onUpdateReservation(tfReservationId, tfNewCheckIn, tfNewCheckOut, spNewGuests));
-        panel.add(btnUpdate, g);
-
-        // 취소 버튼
-        g.gridx=3;
-        JButton btnCancel = makeBtn("예약 취소", new Color(200,50,50));
-        btnCancel.addActionListener(e -> onCancelReservation(tfReservationId));
-        panel.add(btnCancel, g);
-
-        // 결과 출력
-        JTextArea taManageResult = new JTextArea(4, 0);
-        taManageResult.setFont(vf);
-        taManageResult.setEditable(false);
-        taManageResult.setBackground(new Color(250,245,245));
-        JScrollPane sp = new JScrollPane(taManageResult);
-        sp.setBorder(BorderFactory.createTitledBorder(
-                BorderFactory.createLineBorder(new Color(180,180,180)),
-                "처리 결과", 0, 0,
-                new Font("맑은 고딕", Font.BOLD, 12)));
-        g.gridx=0; g.gridy=3; g.gridwidth=4; g.weighty=1;
-        g.fill=GridBagConstraints.BOTH;
-        panel.add(sp, g);
-
-        // 수정/취소 결과를 이 TextArea에 출력하기 위해 참조 저장
-        this.manageResultArea = taManageResult;
-
-        return panel;
-    }
-
-    // 예약 관리 탭 결과 출력 영역
-    private JTextArea manageResultArea;
 
     // ────────────────────────────────────────────────────────────────────
     // 이벤트 핸들러
@@ -407,63 +323,19 @@ public class ReservationPanel extends JPanel {
             return;
         }
 
-        // 예약 결과 출력 (뷰 사용)
-        String[] detail = reservationService.getReservationDetail(result);
-        if (detail != null) {
-            // 선택한 룸 가격으로 총액 계산
-            String priceStr = roomTableModel.getValueAt(selectedRow, 2).toString().replace(",","");
-            int pricePerNight = Integer.parseInt(priceStr);
-            int total = reservationService.calcTotalPrice(pricePerNight, checkIn, checkOut);
+        // 예약 성공 시 팝업 및 상태 초기화 진행
+        JOptionPane.showMessageDialog(this, "🎉 예약이 성공적으로 완료되었습니다!", "예약 성공", JOptionPane.INFORMATION_MESSAGE);
 
-            taResult.setText(
-                    "╔══════════════════════════════════════╗\n" +
-                            "  ✅ 예약이 완료되었습니다!\n" +
-                            "╚══════════════════════════════════════╝\n" +
-                            "  예약 ID   : " + result        + "\n" +
-                            "  호텔명    : " + detail[0]      + "\n" +
-                            "  룸 유형   : " + detail[1]      + "\n" +
-                            "  체크인    : " + detail[2]      + "\n" +
-                            "  체크아웃  : " + detail[3]      + "\n" +
-                            "  인원      : " + detail[4] + "명\n" +
-                            "  총 요금   : " + String.format("%,d", total) + "원\n" +
-                            "  예약자    : " + detail[6]
-            );
-        }
-    }
+        // 입력 필드 및 테이블 초기화
+        tfCheckIn.setText("");
+        tfCheckOut.setText("");
+        spGuests.setValue(1);
+        roomTableModel.setRowCount(0);
+        taResult.setText("예약 대기 상태입니다.");
 
-    /** 예약 수정 버튼 */
-    private void onUpdateReservation(JTextField tfId, JTextField tfCi,
-                                     JTextField tfCo, JSpinner spG) {
-        try {
-            int id = Integer.parseInt(tfId.getText().trim());
-            LocalDate ci = LocalDate.parse(tfCi.getText().trim());
-            LocalDate co = LocalDate.parse(tfCo.getText().trim());
-            int g = (int) spG.getValue();
-
-            boolean ok = reservationService.updateReservation(id, ci, co, g);
-            manageResultArea.setText(ok
-                    ? "✅ 예약 ID " + id + " 수정 완료\n체크인: " + ci + "  체크아웃: " + co
-                    : "❌ 수정 실패. 예약 ID를 확인해주세요.");
-        } catch (Exception ex) {
-            manageResultArea.setText("❌ 입력값 오류: " + ex.getMessage());
-        }
-    }
-
-    /** 예약 취소 버튼 */
-    private void onCancelReservation(JTextField tfId) {
-        try {
-            int id = Integer.parseInt(tfId.getText().trim());
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "예약 ID " + id + " 를 취소하시겠습니까?",
-                    "예약 취소 확인", JOptionPane.YES_NO_OPTION);
-            if (confirm != JOptionPane.YES_OPTION) return;
-
-            boolean ok = reservationService.cancelReservation(id);
-            manageResultArea.setText(ok
-                    ? "✅ 예약 ID " + id + " 취소 완료"
-                    : "❌ 취소 실패. 예약 ID를 확인해주세요.");
-        } catch (NumberFormatException ex) {
-            manageResultArea.setText("❌ 예약 ID는 숫자로 입력해주세요.");
+        // 완료 후 콜백 실행을 통해 마이페이지로 자동 이동
+        if (reservationSuccessListener != null) {
+            reservationSuccessListener.run();
         }
     }
 
@@ -474,7 +346,7 @@ public class ReservationPanel extends JPanel {
     /**
      * 메인 프레임 등에서 성공적으로 로그인된 사용자의 정보를 이 패널에 주입합니다.
      * 주입된 고객 정보는 UI 텍스트 필드에 고정 출력되며 사용자가 임의로 변조할 수 없습니다.
-     * * @param customer 세션에 보관된 현재 로그인 유저
+     * @param customer 세션에 보관된 현재 로그인 유저
      */
     public void setLoggedInCustomer(Customer customer) {
         this.loggedInCustomer = customer;
@@ -517,6 +389,13 @@ public class ReservationPanel extends JPanel {
      */
     public void setBackListener(Runnable listener) {
         this.backListener = listener;
+    }
+
+    /**
+     * 예약 성공 시 마이페이지 이동 등 추가 동작을 위한 콜백 등록
+     */
+    public void setReservationSuccessListener(Runnable listener) {
+        this.reservationSuccessListener = listener;
     }
 
     // ────────────────────────────────────────────────────────────────────

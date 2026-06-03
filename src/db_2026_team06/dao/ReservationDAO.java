@@ -362,4 +362,34 @@ public class ReservationDAO {
             return false;
         }
     }
+
+    /**
+     * [GUI 마이페이지용] 특정 고객의 예약 내역을 리스트로 반환합니다.
+     */
+    public List<String[]> findReservationsByCustomerId(int customerId) {
+        List<String[]> list = new ArrayList<>();
+        // 팀원이 만들어둔 vReservationDetail 뷰를 활용합니다.
+        String sql = "SELECT reservationId, room_number, room_type, guests, check_in, check_out, reservation_date "
+                + "FROM vReservationDetail WHERE customerId = ? ORDER BY check_in DESC";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, customerId);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new String[]{
+                            String.valueOf(rs.getInt("reservationId")),
+                            String.valueOf(rs.getInt("room_number")),
+                            rs.getString("room_type"),
+                            String.valueOf(rs.getInt("guests")),
+                            rs.getString("check_in"),
+                            rs.getString("check_out"),
+                            rs.getString("reservation_date")
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[오류] 마이페이지 예약 조회 실패: " + e.getMessage());
+        }
+        return list;
+    }
 }
