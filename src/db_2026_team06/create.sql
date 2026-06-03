@@ -5,7 +5,7 @@ FLUSH PRIVILEGES;
 
 -- 데이터베이스 생성 및 선택
 DROP DATABASE IF EXISTS DB2026Team06;
-CREATE DATABASE DB2026Team06;-- DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci; -- 인코딩 명시
+CREATE DATABASE DB2026Team06;
 USE DB2026Team06;
 
 -- 1. Hotel 테이블 생성
@@ -76,6 +76,7 @@ CREATE TABLE Review (
     FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE
 );
 
+-- 룸 정보 출력하는 뷰 생성
 CREATE VIEW vRoomInfo AS
 SELECT 
     r.room_number,
@@ -84,6 +85,32 @@ SELECT
     r.capacity,
     r.hotel_id
 FROM Room r;
+
+-- 예약 정보 출력하는 뷰 생성
+CREATE VIEW vReservationDetail AS
+SELECT 
+    r.customer_id AS customerId,
+    r.reservation_id AS reservationId,
+    c.name AS customer_name,
+    r.room_number,
+    rm.type AS room_type,
+    rm.price_per_night,
+    r.guests,
+    r.check_in,
+    r.check_out,
+    r.reservation_date
+FROM Reservation r
+JOIN Customer c ON r.customer_id = c.customer_id -- 예약 정보와 고객 정보 조인
+JOIN Room rm ON r.room_number = rm.room_number; -- 예약 정보와 룸 정보 조인
+
+-- checkAvailability(): room_number + 날짜 범위로 조회
+CREATE INDEX idx_reservation_room_date ON Reservation(room_number, check_in, check_out);
+
+-- viewReservation(): customer_id로 조회
+CREATE INDEX idx_reservation_customer ON Reservation(customer_id);
+
+-- checkInCustomer(): name + phone + email로 조회
+CREATE INDEX idx_customer_lookup ON Customer(name, phone, email);
 
 -- 초기 데이터
 INSERT INTO Hotel VALUES

@@ -8,7 +8,7 @@ public class DBConnection {
     // 싱글톤 인스턴스 보관 변수
     private static Connection connection = null;
 
-    // 데이터베이스 접속 정보 상수 정의
+    // 데이터베이스 접속 정보 상수 정의, 한글 사용으로 인한 인코딩 방식 명시
     private static final String URL = "jdbc:mysql://localhost:3306/DB2026Team06"
     		+ "?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&useUnicode=true";
     private static final String USER = "DB2026Team06";

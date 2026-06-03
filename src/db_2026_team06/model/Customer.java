@@ -1,6 +1,7 @@
 package db_2026_team06.model;
 
 public class Customer {
+	//변수 정의
 	private int customer_id;
 	private String name;
 	private String email;

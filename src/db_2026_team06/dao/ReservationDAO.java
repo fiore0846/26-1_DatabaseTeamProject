@@ -1,5 +1,4 @@
 package db_2026_team06.dao;
-//SQL을 직접 실행하는 클래스. DB에서 데이터를 가져오거나 저장함.
 
 import db_2026_team06.model.Reservation;
 import db_2026_team06.model.Room;
@@ -11,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ReservationDAO {
-
+	// 룸 정보 출력하기 위해 룸 객체 리스트 생성
 	public List<Room> showRoomInfo() throws Exception {
 		String sql = "SELECT room_number, type, price_per_night, capacity, hotel_id FROM vRoomInfo";
 		
@@ -20,7 +19,7 @@ public class ReservationDAO {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
 			ResultSet rs = pstmt.executeQuery();
-			
+			// rs 다음 객체 없을 때까지 룸 정보 검색하여 리스트에 추가
 			while (rs.next()) {
 				Room room = new Room(
                     rs.getInt("room_number"),
@@ -39,6 +38,7 @@ public class ReservationDAO {
 	}
 	
 	public int checkInCustomer(String name, String phone, String email) throws Exception {
+		// 고객 정보 있는지 확인하고 고객 번호(customer_id) 반환
 		String sql = "SELECT customer_id FROM Customer WHERE name = ? AND phone = ? AND email = ?";
 		try {
 			Connection conn = DBConnection.getConnection();
@@ -49,7 +49,7 @@ public class ReservationDAO {
 			
 			ResultSet rs = pstmt.executeQuery();
 			if (rs.next()) {
-	            return rs.getInt(1);
+	            return rs.getInt(1); // SELECT문으로 조회한 customer_id 반환
 			}
 			return 0;
 		} catch (SQLException e) {
@@ -59,14 +59,15 @@ public class ReservationDAO {
 		}
 	}
 	
-	// 예약 가능 여부 확인 (날짜 겹치는 예약이 있는지 체크)
 	public boolean checkAvailability(int roomId, LocalDate checkIn, LocalDate checkOut) throws Exception {
+		// 예약 가능 여부 확인 (날짜 겹치는 예약이 있는지 체크)
 		String sql = "SELECT COUNT(*) FROM Reservation "
 				+ "WHERE room_number = ? AND (check_in <= ? AND check_out >= ?)";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
+			// sql문에 입력값 넣어 동적으로 조회
 			pstmt.setInt(1, roomId);
 			pstmt.setDate(2, Date.valueOf(checkOut));
 			pstmt.setDate(3, Date.valueOf(checkIn));
@@ -81,31 +82,14 @@ public class ReservationDAO {
 		}
 	}
 	
-	public int getReservationId() throws Exception {
-		String sql = "SELECT COUNT(*) FROM Reservation";
-		
-		try {
-			Connection conn = DBConnection.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement(sql);
-			ResultSet rs = pstmt.executeQuery();
-			rs.next();
-			int reservationId = rs.getInt(1);
-			return (reservationId+1);
-		} catch (SQLException e) {
-			System.out.println("DB연결 실패하거나, SQL문이 틀렸습니다.");
-			System.out.print("사유 : " + e.getMessage());
-			return -1;
-		}
-	}
-	
-	// 예약 생성 (INSERT)
 	public boolean createReservation(Reservation reservation) throws Exception {
+		// 예약 생성 (INSERT)
 		String sql = "INSERT INTO Reservation (check_in, check_out, reservation_date, guests, room_number, customer_id) VALUES (?, ?, ?, ?, ?, ?)";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
-			
+			// sql문에 입력값 넣어 동적으로 조회
 			pstmt.setDate(1, Date.valueOf(reservation.getCheckIn()));
 			pstmt.setDate(2, Date.valueOf(reservation.getCheckOut()));
 			pstmt.setDate(3, Date.valueOf(reservation.getReservationDate()));
@@ -121,33 +105,36 @@ public class ReservationDAO {
 		}
 	}
 	
-	//예약 확인
 	public boolean viewReservation(int customerId) throws Exception {
-		String sql = "SELECT reservation_id, room_number, reservation_date, guests, check_in, check_out "
-				+ "FROM Reservation WHERE customer_id = ?";
+		//예약 확인
+		String sql = "SELECT customerId, reservationId, customer_name, room_number, room_type, price_per_night, guests, check_in, check_out, reservation_date"
+				+ " FROM vReservationDetail WHERE customerId = ?";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
-			
 			pstmt.setInt(1, customerId);
 			ResultSet rs = pstmt.executeQuery();
 			
-			System.out.println("예약 번호 | 객실 번호 | 예약 일자 | 일행 수 | 체크인 날짜 | 체크아웃 날짜");
+			System.out.println("예약 번호 | 고객명 | 객실 번호 | 객실 유형 | 1박 당 가격 | 일행 수 | 체크인 날짜 | 체크아웃 날짜 | 예약일");
 			boolean hasReservation = false;
 	        
 	        while (rs.next()) {
+	        	// rs.next()가 true이면 예약 정보 있는 것
 	            hasReservation = true;
 	            
-	            int reservationId = rs.getInt("reservation_id");
+	            int reservationId = rs.getInt("reservationId");
+	            String name = rs.getString("customer_name");
 	            int roomNumber = rs.getInt("room_number");
-	            String reservationDate = rs.getString("reservation_date");
+	            String roomType = rs.getString("room_type");
+	            int pricePerNight = rs.getInt("price_per_night");
 	            int guests = rs.getInt("guests");
 	            String checkIn = rs.getString("check_in");
 	            String checkOut = rs.getString("check_out");
+	            String reservationDate = rs.getString("reservation_date");
 	            
 	            // 형식에 맞춰 출력
-	            System.out.printf("%d, %d, %s, %d, %s, %s\n", reservationId, roomNumber, reservationDate, guests, checkIn, checkOut);
+	            System.out.printf("%d, %s, %d, %s, %d, %d, %s, %s, %s\n", reservationId, name, roomNumber, roomType, pricePerNight, guests, checkIn, checkOut, reservationDate);
 	        }
 	        
 	        if (!hasReservation) {
@@ -161,14 +148,14 @@ public class ReservationDAO {
 		}
 	}
 	
-	// 예약 취소 (DELETE)
 	public boolean cancelReservation(int reservationId) throws Exception {
+		// 예약 취소 (DELETE)
 		String sql = "DELETE FROM Reservation WHERE reservation_id = ?";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
-			
+			// sql문에 입력값 넣어 동적으로 조회
 			pstmt.setInt(1, reservationId);
 			return pstmt.executeUpdate() > 0;
 		} catch (SQLException e) {

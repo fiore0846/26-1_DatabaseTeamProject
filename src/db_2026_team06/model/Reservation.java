@@ -3,6 +3,7 @@ package db_2026_team06.model;
 import java.time.LocalDate;
 
 public class Reservation {
+	//변수 정의
 	private int reservation_id;
 	private LocalDate check_in;
 	private LocalDate check_out;
@@ -13,9 +14,8 @@ public class Reservation {
 	
 	//생성자
 	public Reservation() {}
-	public Reservation(int reservation_id, LocalDate check_in, LocalDate check_out,
+	public Reservation(LocalDate check_in, LocalDate check_out,
 			LocalDate reservation_date, int guests, int room_number, int customer_id) {
-		this.reservation_id = reservation_id;
 		this.check_in = check_in;
 		this.check_out = check_out;
 		this.reservation_date = reservation_date;

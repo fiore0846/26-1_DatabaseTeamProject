@@ -1,12 +1,14 @@
 package db_2026_team06.model;
 
 public class Room {
+	//변수 정의
 	private int room_number;
 	private String type;
 	private int price_per_night;
 	private int capacity;
 	private int hotel_id;
 	
+	//생성자
 	public Room() {}
 	public Room(int room_number, String type,
 			int price_per_night, int capacity, int hotel_id) {

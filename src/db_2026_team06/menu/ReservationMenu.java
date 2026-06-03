@@ -1,6 +1,9 @@
 package db_2026_team06.menu;
 
 import db_2026_team06.service.ReservationService;
+import db_2026_team06.model.Room;
+
+import java.util.List;
 import java.util.Scanner;
 
 public class ReservationMenu {
@@ -47,6 +50,7 @@ public class ReservationMenu {
     }
 
     private void reserveRoom() {
+    	// 예약하기
 
         sc.nextLine();
 
@@ -60,14 +64,6 @@ public class ReservationMenu {
 
         System.out.print("이메일 입력 : ");
         String email = sc.nextLine().trim();
-        
-        System.out.print("일행 수 입력 : ");
-        int guests = sc.nextInt();
-
-        System.out.print("객실 번호 입력 : ");
-        int roomId = sc.nextInt();
-
-        sc.nextLine();
 
         System.out.print("체크인 날짜 입력 (YYYY-MM-DD) : ");
         String checkIn = sc.nextLine();
@@ -75,9 +71,39 @@ public class ReservationMenu {
         System.out.print("체크아웃 날짜 입력 (YYYY-MM-DD) : ");
         String checkOut = sc.nextLine();
         
+        // vRoomInfo 뷰를 통해 객실 목록 출력
+        try {
+        	List<Room> rooms = reservationService.getRoomList();
+            if (rooms.isEmpty()) {
+                System.out.println("[안내] 등록된 객실이 없습니다.");
+                return;
+            }
+            System.out.println("\n─────────────────────────────────────────────────");
+            System.out.printf("%-10s %-12s %-12s %-8s%n", "객실번호", "타입", "1박 요금(원)", "정원");
+            System.out.println("─────────────────────────────────────────────────");
+            for (Room room : rooms) {
+                System.out.printf("%-10d %-12s %-16d %-8d%n",
+                    room.getRoomNumber(),
+                    room.getType(),
+                    room.getPricePerNight(),
+                    room.getCapacity());
+            }
+        } catch (Exception e) {
+        	System.out.print(e);
+        }
+        
+        System.out.print("일행 수 입력 : ");
+        int guests = sc.nextInt();
+        
+        System.out.print("객실 번호 입력 : ");
+        int roomId = sc.nextInt();
+
+        sc.nextLine();
+        // 예약 생성
         try {
         	reservationService.setReservation(name, phone, email, roomId, guests, checkIn, checkOut);
-        	int customerId = reservationService.getCustomerId(name, phone, email);
+        	//예약 정보 출력
+        	int customerId = reservationService.getCustomerId(name, phone, email); // ReservationService에 있는 함수 이용하여 고객 번호 반환받음.
         	System.out.println("\n===== 예약 정보 =====");
     		System.out.println("고객번호 : " + customerId);
             System.out.println("고객명 : " + name);
@@ -94,13 +120,14 @@ public class ReservationMenu {
     }
     
     private void viewReservation() {
-
+    	// 예약 조회
         System.out.println("\n===== 예약 조회 =====");
 
         System.out.print("고객 ID 입력 : ");
         int customerId = sc.nextInt();
 
         System.out.println(customerId + "번 고객 예약 조회");
+        // 고객 번호로 조회하여 예약 내역 출력
         try {
         	reservationService.viewReservation(customerId);
         } catch (Exception e) {
@@ -109,12 +136,12 @@ public class ReservationMenu {
     }
     
     private void cancelReservation() {
-
+    	// 예약 취소
         System.out.println("\n===== 예약 취소 =====");
 
         System.out.print("예약번호 입력 : ");
         int reservationId = sc.nextInt();
-
+        // 예약 번호로 조회하여 예약 취소
         System.out.println(reservationId + "번 예약 취소");
         try {
         	reservationService.cancelReservation(reservationId);
