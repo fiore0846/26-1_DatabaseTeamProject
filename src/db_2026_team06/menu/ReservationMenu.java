@@ -74,21 +74,23 @@ public class ReservationMenu {
 
         System.out.print("체크아웃 날짜 입력 (YYYY-MM-DD) : ");
         String checkOut = sc.nextLine();
-
-        System.out.println("\n===== 입력 정보 =====");
-        System.out.println("고객명 : " + name);
-        System.out.println("전화번호 : " + phone);
-        System.out.println("이메일 : " + email);
-        System.out.println("일행 수 : " + guests);
-        System.out.println("객실번호 : " + roomId);
-        System.out.println("체크인 : " + checkIn);
-        System.out.println("체크아웃 : " + checkOut);
         
         try {
         	reservationService.setReservation(name, phone, email, roomId, guests, checkIn, checkOut);
+        	int customerId = reservationService.getCustomerId(name, phone, email);
+        	System.out.println("\n===== 예약 정보 =====");
+    		System.out.println("고객번호 : " + customerId);
+            System.out.println("고객명 : " + name);
+            System.out.println("전화번호 : " + phone);
+            System.out.println("이메일 : " + email);
+            System.out.println("일행 수 : " + guests);
+            System.out.println("객실번호 : " + roomId);
+            System.out.println("체크인 : " + checkIn);
+            System.out.println("체크아웃 : " + checkOut);
         } catch (Exception e) {
         	System.out.print(e);
         }
+        
     }
     
     private void viewReservation() {

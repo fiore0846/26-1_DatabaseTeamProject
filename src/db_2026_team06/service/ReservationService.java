@@ -16,8 +16,7 @@ public class ReservationService {
 	}
 	
 	public boolean setReservation(String name, String phone, String email, int roomId, int guests, String checkIn, String checkOut) throws Exception {
-		int customerId = reservationDAO.checkInCustomer(name, phone, email);
-		System.out.println(customerId); //확인 후 삭제
+		int customerId = getCustomerId(name, phone, email);
 		LocalDate checkInDate = LocalDate.parse(checkIn);
 		LocalDate checkOutDate = LocalDate.parse(checkOut);
 		if (customerId != 0) {
@@ -32,6 +31,10 @@ public class ReservationService {
 			System.out.println("고객 정보를 찾을 수 없습니다. 이름을 다시 확인해주세요.");
 			return false;
 		}
+	}
+	
+	public int getCustomerId(String name, String phone, String email) throws Exception {
+		return reservationDAO.checkInCustomer(name, phone, email);
 	}
 	
 	public boolean createReservation(int customerId, int roomNumber, int guests, LocalDate checkIn, LocalDate checkOut) throws Exception {
