@@ -112,6 +112,18 @@ CREATE INDEX idx_reservation_customer ON Reservation(customer_id);
 -- checkInCustomer(): name + phone + email로 조회
 CREATE INDEX idx_customer_lookup ON Customer(name, phone, email);
 
+-- index 사용 확인
+EXPLAIN SELECT COUNT(*) FROM Reservation
+WHERE room_number = 101 AND check_in <= '2026-06-12' AND check_out >= '2026-06-10';
+-- idx_reservation_room_date 사용 확인
+
+EXPLAIN SELECT * FROM Reservation WHERE customer_id = 1;
+-- idx_reservation_customer 사용 확인
+
+EXPLAIN SELECT customer_id FROM Customer
+WHERE name = '김민준' AND phone = '010-1111-1111' AND email = 'minjun@gmail.com';
+-- idx_customer_lookup 사용 확인
+
 -- 초기 데이터
 INSERT INTO Hotel VALUES
 (1, '서울 스카이 호텔', '서울 강남구', '02-1111-1111', '도심 비즈니스 호텔'),

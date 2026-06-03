@@ -14,8 +14,9 @@ public class Reservation {
 	
 	//생성자
 	public Reservation() {}
-	public Reservation(LocalDate check_in, LocalDate check_out,
+	public Reservation(int reservationId, LocalDate check_in, LocalDate check_out,
 			LocalDate reservation_date, int guests, int room_number, int customer_id) {
+		this.reservationId   = reservationId;
 		this.check_in = check_in;
 		this.check_out = check_out;
 		this.reservation_date = reservation_date;
