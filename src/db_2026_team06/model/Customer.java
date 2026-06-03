@@ -8,7 +8,9 @@ public class Customer {
     private String password; // 새로 추가된 비밀번호 필드
 
     // 생성자
-    public Customer(int customerId, String name, String email, String phone, String password) {
+    public Customer() {}
+
+    public Customer(int customerId, String name, String email, String phone) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;

@@ -16,11 +16,10 @@ public class DBConnection {
     // 외부에서 인스턴스를 생성하지 못하도록 생성자를 private으로 제한
     private DBConnection() {}
 
-    /**
-     * 싱글톤 패턴으로 구현된 Connection 객체 반환 메서드
-     * @return Connection 객체
-     * @throws SQLException 데이터베이스 연결 실패 시 발생
-     */
+     //싱글톤 패턴으로 구현된 Connection 객체 반환 메서드
+     //@return Connection 객체
+     //@throws SQLException 데이터베이스 연결 실패 시 발생
+
     public static synchronized Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             try {
@@ -35,9 +34,6 @@ public class DBConnection {
         return connection;
     }
 
-    /**
-     * 프로그램 종료 시 안전하게 데이터베이스 커넥션을 닫는 메서드
-     */
     public static void closeConnection() {
         try {
             if (connection != null && !connection.isClosed()) {
