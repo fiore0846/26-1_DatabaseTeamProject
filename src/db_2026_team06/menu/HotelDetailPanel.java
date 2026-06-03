@@ -78,7 +78,10 @@ public class HotelDetailPanel extends JPanel {
         // 예약 버튼
         JButton btnReserve = new JButton("예약하기");
         btnReserve.setFont(new Font("맑은 고딕", Font.BOLD, 13));
-        btnReserve.setBackground(new Color(50, 120, 220));
+        btnReserve.setBackground(new Color(220, 80, 80));  // 빨간색
+        btnReserve.setForeground(Color.WHITE);
+        btnReserve.setOpaque(true);
+        btnReserve.setBorderPainted(false);
         btnReserve.setForeground(Color.WHITE);
         btnReserve.setFocusPainted(false);
         btnReserve.addActionListener(e -> {
