@@ -45,7 +45,7 @@ public class HotelExplorePanel extends JPanel {
     public HotelExplorePanel() {
         this.hotelService = new HotelService();
         this.mapPanel     = new MapPanel();
-        this.detailPanel  = new HotelDetailPanel(hotelService);
+        this.detailPanel  = new HotelDetailPanel();
 
         setLayout(new BorderLayout(0, 0));
         initTopBar();
@@ -126,9 +126,10 @@ public class HotelExplorePanel extends JPanel {
         mapPanel.setHotelSelectListener(hotelId ->
                 detailPanel.showHotelDetail(hotelId));
 
-        // 예약 버튼 클릭을 외부 리스너로 전달
-        detailPanel.setReservationListener(hotelId -> {
-            // [수정된 부분] 로그인이 되어 있지 않으면 경고창을 띄우고 진입을 차단합니다.
+        // [수정] 컴파일러가 헷갈리지 않도록 (HotelDetailPanel.ReservationListener)로 명시적 형변환을 해줍니다!
+        detailPanel.setReservationListener((HotelDetailPanel.ReservationListener) hotelId -> {
+
+            // 로그인이 되어 있지 않으면 경고창을 띄우고 진입을 차단합니다.
             if (this.loggedInCustomer == null) {
                 JOptionPane.showMessageDialog(this,
                         "예약 기능을 사용하려면 로그인이 필요합니다.\n우측 상단의 [로그인] 버튼을 이용해 주세요.",
@@ -140,6 +141,9 @@ public class HotelExplorePanel extends JPanel {
             if (reservationListener != null) {
                 reservationListener.onReservationRequested(hotelId);
             }
+        });
+        detailPanel.setBackListener(() -> {
+            detailPanel.showHotelDetail(0); // 0을 넘기면 팀원 코드 내부 로직에 의해 초기 상태로 리셋됨
         });
     }
 

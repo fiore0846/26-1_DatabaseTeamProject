@@ -1,6 +1,9 @@
 package db_2026_team06.service;
 
 import db_2026_team06.dao.HotelDAO;
+import db_2026_team06.dao.RoomDAO;
+import db_2026_team06.dao.ReviewDAO;
+import db_2026_team06.dao.AttractionDAO;
 import db_2026_team06.model.Attraction;
 import db_2026_team06.model.Hotel;
 import db_2026_team06.model.Room;
@@ -15,6 +18,9 @@ import java.util.List;
 public class HotelService {
 
     private final HotelDAO hotelDAO;
+    private RoomDAO roomDAO = new RoomDAO();
+    private ReviewDAO reviewDAO = new ReviewDAO();
+    private AttractionDAO attractionDAO = new AttractionDAO();
 
     public HotelService() {
         this.hotelDAO = new HotelDAO();
@@ -74,26 +80,9 @@ public class HotelService {
      * @return 평균 별점 (0.0 ~ 5.0)
      */
     public double getAvgRating(int hotelId) {
-        return hotelDAO.findAvgRatingByHotelId(hotelId);
+        return reviewDAO.getAverageRatingByHotelId(hotelId);
     }
 
-    /**
-     * 특정 호텔의 객실 목록을 반환합니다. (조인 쿼리 활용)
-     * @param hotelId 조회할 호텔 ID
-     * @return Room 리스트
-     */
-    public List<Room> getRoomsByHotelId(int hotelId) {
-        return hotelDAO.findRoomsByHotelId(hotelId);
-    }
-
-    /**
-     * 특정 호텔의 리뷰 목록을 반환합니다. (조인 쿼리 활용)
-     * @param hotelId 조회할 호텔 ID
-     * @return Review 리스트
-     */
-    public List<Review> getReviewsByHotelId(int hotelId) {
-        return hotelDAO.findReviewsByHotelId(hotelId);
-    }
 
     /**
      * 특정 호텔의 주변 관광지 목록을 반환합니다. (3-way 조인 활용)
@@ -101,7 +90,7 @@ public class HotelService {
      * @return Attraction 리스트
      */
     public List<Attraction> getAttractionsByHotelId(int hotelId) {
-        return hotelDAO.findAttractionsByHotelId(hotelId);
+        return attractionDAO.getNearbyAttractions(hotelId);
     }
 
     /**
@@ -117,4 +106,26 @@ public class HotelService {
         }
         return sb.toString();
     }
+
+    public Hotel getHotelDetail(int hotelId) {
+        return hotelDAO.findHotelById(hotelId);
+    }
+
+    public List<Room> getRoomsByHotelId(int hotelId) {
+        return roomDAO.getRoomsByHotelId(hotelId);
+    }
+
+    public Room getRoomDetail(int roomNumber) {
+        return roomDAO.getRoomDetail(roomNumber);
+    }
+
+    public List<Review> getReviewsByHotelId(int hotelId) {
+        return reviewDAO.getReviewsByHotelId(hotelId);
+    }
+
+    public double getAverageRatingByHotelId(int hotelId) {
+        return reviewDAO.getAverageRatingByHotelId(hotelId);
+    }
+
+    public List<Attraction> getNearbyAttractions(int hotelId) {return attractionDAO.getNearbyAttractions(hotelId); }
 }

@@ -31,11 +31,18 @@ public class ReservationService {
      * @return 생성된 reservation_id, 실패 시 -1
      */
     public int createReservation(Customer customer, int roomNumber,
-                                  LocalDate checkIn, LocalDate checkOut, int guests) {
-        // 중복 체크 먼저
-        if (reservationDAO.checkAvailability(roomNumber, checkIn, checkOut)) {
-            return -2; // -2 = 중복 예약
+                                 LocalDate checkIn, LocalDate checkOut, int guests) {
+
+        try {
+            if (!reservationDAO.checkAvailability(roomNumber, checkIn, checkOut)) {
+                return -2; // -2 = 중복 예약 (예약 불가)
+            }
+        } catch (Exception e) {
+            System.err.println("[오류] 중복 예약 확인 중 문제 발생: " + e.getMessage());
+            return -1;
         }
+
+        // 중복 검사를 무사히 통과했다면 DAO에 예약 생성을 요청합니다.
         return reservationDAO.createReservation(customer, roomNumber, checkIn, checkOut, guests);
     }
 
@@ -60,7 +67,13 @@ public class ReservationService {
      * 예약을 취소합니다. (Delete)
      */
     public boolean cancelReservation(int reservationId) {
-        return reservationDAO.cancelReservation(reservationId);
+        try {
+            return reservationDAO.cancelReservation(reservationId);
+        } catch (Exception e) {
+            System.err.println("[오류] 예약 취소 중 문제 발생: " + e.getMessage());
+            // 에러가 발생하면 취소 실패를 의미하는 false를 반환합니다.
+            return false;
+        }
     }
 
     /**

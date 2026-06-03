@@ -7,296 +7,470 @@ import db_2026_team06.model.Room;
 import db_2026_team06.service.HotelService;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 /**
- * 호텔 세부 정보를 표시하는 패널
- *
- * 탭 구성:
- *  - 기본 정보 탭: 호텔명, 위치, 연락처, 평균 별점, 주변 관광지, 설명
- *  - 룸 정보 탭:   룸 번호, 유형, 1박 가격, 수용 인원 테이블
- *  - 리뷰 탭:      리뷰 ID, 별점, 날짜, 내용 테이블
+ * 호텔 상세 정보를 보여주는 패널입니다.
+ * 호텔 기본 정보, 주변 관광지, 객실 정보, 리뷰 정보를 출력합니다.
  */
 public class HotelDetailPanel extends JPanel {
+    private final HotelService hotelService = new HotelService();
 
-    private final HotelService hotelService;
+    private int hotelId;
+    private Runnable backListener;
+    private IntConsumer reservationListener;
 
-    // UI 컴포넌트 - 기본 정보 탭
-    private JLabel  lblHotelName;
-    private JLabel  lblLocation;
-    private JLabel  lblContact;
-    private JLabel  lblAvgRating;
-    private JLabel  lblAttractions;
-    private JTextArea taDescription;
-
-    // UI 컴포넌트 - 룸 정보 탭
-    private DefaultTableModel roomTableModel;
-
-    // UI 컴포넌트 - 리뷰 탭
-    private DefaultTableModel reviewTableModel;
-
-    // 예약 버튼 클릭 리스너 (예약 파트와 연동)
-    private ReservationListener reservationListener;
-
-    // 현재 표시 중인 호텔 ID
-    private int currentHotelId = -1;
-
-    /**
-     * 예약 버튼 클릭 이벤트를 외부로 전달하는 리스너 인터페이스
-     */
+    // 예약 화면 연동을 위한 인터페이스 및 리스너
     public interface ReservationListener {
         void onReservationRequested(int hotelId);
     }
+    private ReservationListener customReservationListener;
 
-    public HotelDetailPanel(HotelService hotelService) {
-        this.hotelService = hotelService;
-        setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(400, 400));
+    private JLabel hotelNameLabel;
+    private JLabel locationLabel;
+    private JLabel contactLabel;
+    private JLabel ratingLabel;
+
+    private JTextArea descriptionArea;
+    private JPanel attractionListPanel;
+    private JTabbedPane tabbedPane;
+
+    private final Color bgColor = new Color(245, 248, 252);
+    private final Color lightBlue = new Color(232, 244, 255);
+    private final Color buttonBlue = new Color(210, 229, 245);
+    private final Color borderBlue = new Color(170, 200, 230);
+    private final Color panelWhite = Color.WHITE;
+    private final Color cardBg = new Color(250, 252, 255);
+    private final Color cardLine = new Color(220, 230, 240);
+    private final Color titleColor = new Color(35, 45, 60);
+    private final Color subTextColor = new Color(90, 100, 115);
+    private final Color tabSelectedColor = new Color(220, 236, 250);
+
+    public HotelDetailPanel() {
         initComponents();
-        showPlaceholder();
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    // UI 초기화
-    // ────────────────────────────────────────────────────────────────────
+    // 호텔 상세 화면으로 넘어올 때 선택된 호텔 ID를 설정
+    public void setTargetHotel(int hotelId) {
+        this.hotelId = hotelId;
+        refreshTabs();
+        loadHotelInfo();
+    }
 
-    /**
-     * 탭 패널 및 하위 컴포넌트를 초기화합니다.
-     */
+    // HotelExplorePanel과의 연동을 위한 데이터 갱신 메서드
+    public void showHotelDetail(int hotelId) {
+        setTargetHotel(hotelId);
+    }
+
+    // 뒤로가기 버튼 동작을 외부에서 연결
+    public void setBackListener(Runnable backListener) {
+        this.backListener = backListener;
+    }
+
+    // 예약하기 버튼 동작을 외부에서 연결 (IntConsumer 방식)
+    public void setReservationListener(IntConsumer reservationListener) {
+        this.reservationListener = reservationListener;
+    }
+
+    // 예약하기 버튼 동작을 외부에서 연결 (커스텀 인터페이스 방식)
+    public void setReservationListener(ReservationListener listener) {
+        this.customReservationListener = listener;
+    }
+
+    // 전체 화면 구성
     private void initComponents() {
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
+        setLayout(new BorderLayout(12, 12));
+        setBackground(bgColor);
+        setBorder(new EmptyBorder(15, 15, 15, 15));
 
-        tabbedPane.addTab("기본 정보", buildInfoTab());
-        tabbedPane.addTab("룸 정보",   buildRoomTab());
-        tabbedPane.addTab("리뷰",      buildReviewTab());
+        add(createTopPanel(), BorderLayout.NORTH);
+
+        tabbedPane = new JTabbedPane();
+        tabbedPane.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        tabbedPane.setBackground(panelWhite);
+        tabbedPane.setForeground(titleColor);
+        UIManager.put("TabbedPane.selected", tabSelectedColor);
 
         add(tabbedPane, BorderLayout.CENTER);
 
-        // 예약 버튼
-        JButton btnReserve = new JButton("예약하기");
-        btnReserve.setFont(new Font("맑은 고딕", Font.BOLD, 13));
-        btnReserve.setBackground(new Color(220, 80, 80));  // 빨간색
-        btnReserve.setForeground(Color.WHITE);
-        btnReserve.setOpaque(true);
-        btnReserve.setBorderPainted(false);
-        btnReserve.setForeground(Color.WHITE);
-        btnReserve.setFocusPainted(false);
-        btnReserve.addActionListener(e -> {
-            if (currentHotelId == -1) {
-                JOptionPane.showMessageDialog(this, "먼저 호텔을 선택해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            if (reservationListener != null) {
-                reservationListener.onReservationRequested(currentHotelId);
+        refreshTabs();
+        loadHotelInfo();
+    }
+
+    // 상단 호텔 정보와 버튼 영역
+    private JPanel createTopPanel() {
+        JPanel topPanel = new JPanel(new BorderLayout(15, 10));
+        topPanel.setBackground(lightBlue);
+        topPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderBlue),
+                new EmptyBorder(15, 18, 15, 18)
+        ));
+
+        JPanel infoPanel = new JPanel(new GridLayout(4, 1, 5, 5));
+        infoPanel.setOpaque(false);
+
+        hotelNameLabel = new JLabel("호텔명: ");
+        locationLabel = new JLabel("위치: ");
+        contactLabel = new JLabel("연락처: ");
+        ratingLabel = new JLabel("평균 별점: ");
+
+        hotelNameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 22));
+        hotelNameLabel.setForeground(Color.BLACK);
+
+        locationLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        contactLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        ratingLabel.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+
+        infoPanel.add(hotelNameLabel);
+        infoPanel.add(locationLabel);
+        infoPanel.add(contactLabel);
+        infoPanel.add(ratingLabel);
+
+        JPanel buttonPanel = new JPanel(new GridLayout(2, 1, 8, 8));
+        buttonPanel.setOpaque(false);
+
+        JButton reservationButton = createMenuButton("예약하기");
+        reservationButton.addActionListener(e -> {
+            // 등록된 리스너의 타입에 맞게 이벤트 전달
+            if (customReservationListener != null) {
+                customReservationListener.onReservationRequested(hotelId);
+            } else if (reservationListener != null) {
+                reservationListener.accept(hotelId);
+            } else {
+                JOptionPane.showMessageDialog(this, "예약 화면으로 이동합니다.\nhotel_id: " + hotelId);
             }
         });
 
-        JPanel southPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        southPanel.add(btnReserve);
-        add(southPanel, BorderLayout.SOUTH);
+        JButton backButton = createMenuButton("뒤로가기");
+        backButton.addActionListener(e -> {
+            if (backListener != null) {
+                backListener.run();
+            }
+        });
+
+        buttonPanel.add(reservationButton);
+        buttonPanel.add(backButton);
+
+        topPanel.add(infoPanel, BorderLayout.CENTER);
+        topPanel.add(buttonPanel, BorderLayout.EAST);
+
+        return topPanel;
     }
 
-    /**
-     * 기본 정보 탭 패널을 생성합니다.
-     */
-    private JPanel buildInfoTab() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets  = new Insets(5, 5, 5, 5);
-        gbc.anchor  = GridBagConstraints.WEST;
-        gbc.fill    = GridBagConstraints.HORIZONTAL;
+    // 탭 내용 새로고침
+    private void refreshTabs() {
+        if (tabbedPane == null) {
+            return;
+        }
 
-        Font labelFont = new Font("맑은 고딕", Font.BOLD,  12);
-        Font valueFont = new Font("맑은 고딕", Font.PLAIN, 12);
+        tabbedPane.removeAll();
+        tabbedPane.addTab("기본 정보", createBasicInfoPanel());
+        tabbedPane.addTab("룸 정보", createRoomPanel());
+        tabbedPane.addTab("리뷰", createReviewPanel());
+    }
 
-        // 호텔명
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0;
-        panel.add(makeLabel("호텔명", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        lblHotelName = makeLabel("-", valueFont);
-        panel.add(lblHotelName, gbc);
+    // 호텔 소개와 주변 관광지 화면
+    private JPanel createBasicInfoPanel() {
+        JPanel panel = new JPanel(new GridLayout(1, 2, 12, 0));
+        panel.setBackground(bgColor);
+        panel.setBorder(new EmptyBorder(10, 5, 5, 5));
 
-        // 위치
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0;
-        panel.add(makeLabel("위치", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        lblLocation = makeLabel("-", valueFont);
-        panel.add(lblLocation, gbc);
+        JPanel descriptionPanel = createSectionPanel("호텔 소개");
+        JPanel attractionPanel = createSectionPanel("주변 관광지");
 
-        // 연락처
-        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0;
-        panel.add(makeLabel("연락처", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        lblContact = makeLabel("-", valueFont);
-        panel.add(lblContact, gbc);
+        descriptionArea = new JTextArea();
+        descriptionArea.setEditable(false);
+        descriptionArea.setLineWrap(true);
+        descriptionArea.setWrapStyleWord(true);
+        descriptionArea.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        descriptionArea.setForeground(titleColor);
+        descriptionArea.setBackground(panelWhite);
+        descriptionArea.setMargin(new Insets(10, 10, 10, 10));
+        descriptionArea.setBorder(BorderFactory.createLineBorder(cardLine));
 
-        // 평균 별점
-        gbc.gridx = 0; gbc.gridy = 3; gbc.weightx = 0;
-        panel.add(makeLabel("평균 별점", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        lblAvgRating = makeLabel("-", new Font("맑은 고딕", Font.BOLD, 13));
-        lblAvgRating.setForeground(new Color(200, 140, 0));
-        panel.add(lblAvgRating, gbc);
+        JScrollPane descriptionScrollPane = new JScrollPane(descriptionArea);
+        descriptionScrollPane.setBorder(BorderFactory.createEmptyBorder());
+        descriptionScrollPane.getViewport().setBackground(panelWhite);
 
-        // 주변 관광지
-        gbc.gridx = 0; gbc.gridy = 4; gbc.weightx = 0;
-        panel.add(makeLabel("주변 관광지", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1;
-        lblAttractions = makeLabel("-", valueFont);
-        panel.add(lblAttractions, gbc);
+        descriptionPanel.add(descriptionScrollPane, BorderLayout.CENTER);
 
-        // 호텔 설명
-        gbc.gridx = 0; gbc.gridy = 5; gbc.weightx = 0; gbc.anchor = GridBagConstraints.NORTHWEST;
-        panel.add(makeLabel("설명", labelFont), gbc);
-        gbc.gridx = 1; gbc.weightx = 1; gbc.weighty = 1;
-        gbc.fill = GridBagConstraints.BOTH;
-        taDescription = new JTextArea(4, 20);
-        taDescription.setFont(valueFont);
-        taDescription.setLineWrap(true);
-        taDescription.setWrapStyleWord(true);
-        taDescription.setEditable(false);
-        taDescription.setBackground(panel.getBackground());
-        panel.add(new JScrollPane(taDescription,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER), gbc);
+        attractionListPanel = new JPanel();
+        attractionListPanel.setLayout(new BoxLayout(attractionListPanel, BoxLayout.Y_AXIS));
+        attractionListPanel.setBackground(panelWhite);
+        attractionListPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        JScrollPane attractionScrollPane = new JScrollPane(attractionListPanel);
+        attractionScrollPane.setBorder(BorderFactory.createEmptyBorder());
+        attractionScrollPane.getViewport().setBackground(panelWhite);
+
+        attractionPanel.add(attractionScrollPane, BorderLayout.CENTER);
+
+        panel.add(descriptionPanel);
+        panel.add(attractionPanel);
 
         return panel;
     }
 
-    /**
-     * 룸 정보 탭 패널을 생성합니다.
-     */
-    private JScrollPane buildRoomTab() {
-        String[] columns = {"룸 번호", "유형", "1박 가격(원)", "수용 인원"};
-        roomTableModel = new DefaultTableModel(columns, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        JTable table = new JTable(roomTableModel);
-        table.setFont(new Font("맑은 고딕", Font.PLAIN, 12));
-        table.setRowHeight(24);
-        table.getTableHeader().setFont(new Font("맑은 고딕", Font.BOLD, 12));
-        return new JScrollPane(table);
+    // 룸 정보를 카드 형태로 출력
+    private JPanel createRoomPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(bgColor);
+        panel.setBorder(new EmptyBorder(10, 5, 5, 5));
+
+        JPanel roomListPanel = new JPanel();
+        roomListPanel.setLayout(new BoxLayout(roomListPanel, BoxLayout.Y_AXIS));
+        roomListPanel.setBackground(panelWhite);
+        roomListPanel.setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        if (hotelId == 0) {
+            roomListPanel.add(createEmptyLabel("호텔을 선택해주세요."));
+        } else {
+            List<Room> rooms = hotelService.getRoomsByHotelId(hotelId);
+
+            if (rooms == null || rooms.isEmpty()) {
+                roomListPanel.add(createEmptyLabel("등록된 객실 정보가 없습니다."));
+            } else {
+                for (Room room : rooms) {
+                    roomListPanel.add(createRoomCard(room));
+                    roomListPanel.add(Box.createVerticalStrut(10));
+                }
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(roomListPanel);
+        scrollPane.setBorder(BorderFactory.createLineBorder(borderBlue));
+        scrollPane.getViewport().setBackground(panelWhite);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
     }
 
-    /**
-     * 리뷰 탭 패널을 생성합니다.
-     */
-    private JScrollPane buildReviewTab() {
-        String[] columns = {"리뷰 ID", "별점", "날짜", "내용"};
-        reviewTableModel = new DefaultTableModel(columns, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
-        };
-        JTable table = new JTable(reviewTableModel);
-        table.setFont(new Font("맑은 고딕", Font.PLAIN, 12));
-        table.setRowHeight(24);
-        table.getTableHeader().setFont(new Font("맑은 고딕", Font.BOLD, 12));
-        // 내용 컬럼 너비 확장
-        table.getColumnModel().getColumn(3).setPreferredWidth(200);
-        return new JScrollPane(table);
+    // 리뷰를 카드 형태로 출력
+    private JPanel createReviewPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setBackground(bgColor);
+        panel.setBorder(new EmptyBorder(10, 5, 5, 5));
+
+        JPanel reviewListPanel = new JPanel();
+        reviewListPanel.setLayout(new BoxLayout(reviewListPanel, BoxLayout.Y_AXIS));
+        reviewListPanel.setBackground(panelWhite);
+        reviewListPanel.setBorder(new EmptyBorder(12, 12, 12, 12));
+
+        if (hotelId == 0) {
+            reviewListPanel.add(createEmptyLabel("호텔을 선택해주세요."));
+        } else {
+            List<Review> reviews = hotelService.getReviewsByHotelId(hotelId);
+
+            if (reviews == null || reviews.isEmpty()) {
+                reviewListPanel.add(createEmptyLabel("등록된 리뷰가 없습니다."));
+            } else {
+                for (Review review : reviews) {
+                    reviewListPanel.add(createReviewCard(review));
+                    reviewListPanel.add(Box.createVerticalStrut(10));
+                }
+            }
+        }
+
+        JScrollPane scrollPane = new JScrollPane(reviewListPanel);
+        scrollPane.setBorder(BorderFactory.createLineBorder(borderBlue));
+        scrollPane.getViewport().setBackground(panelWhite);
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
     }
 
-    // ────────────────────────────────────────────────────────────────────
-    // 데이터 표시
-    // ────────────────────────────────────────────────────────────────────
+    // 호텔 소개, 주변 관광지 같은 구역 패널 생성
+    private JPanel createSectionPanel(String title) {
+        JPanel sectionPanel = new JPanel(new BorderLayout(0, 10));
+        sectionPanel.setBackground(panelWhite);
+        sectionPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(borderBlue),
+                new EmptyBorder(12, 12, 12, 12)
+        ));
 
-    /**
-     * 선택한 호텔의 전체 세부 정보를 화면에 표시합니다.
-     * @param hotelId 표시할 호텔 ID
-     */
-    public void showHotelDetail(int hotelId) {
-        currentHotelId = hotelId;
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 17));
+        titleLabel.setForeground(titleColor);
+        titleLabel.setBorder(new EmptyBorder(0, 2, 0, 0));
 
-        Hotel hotel = hotelService.getHotelById(hotelId);
-        if (hotel == null) {
-            JOptionPane.showMessageDialog(this, "호텔 정보를 불러오지 못했습니다.",
-                    "오류", JOptionPane.ERROR_MESSAGE);
+        sectionPanel.add(titleLabel, BorderLayout.NORTH);
+
+        return sectionPanel;
+    }
+
+    // 객실 카드 생성
+    private JPanel createRoomCard(Room room) {
+        JPanel card = new JPanel(new BorderLayout(10, 8));
+        card.setBackground(cardBg);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(cardLine),
+                new EmptyBorder(12, 14, 12, 14)
+        ));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 120));
+
+        JLabel titleLabel = new JLabel("객실 " + room.getRoomNumber() + "호");
+        titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        titleLabel.setForeground(titleColor);
+
+        JPanel infoPanel = new JPanel(new GridLayout(2, 2, 10, 6));
+        infoPanel.setOpaque(false);
+
+        infoPanel.add(createSmallInfoLabel("룸 유형: " + safeText(room.getType())));
+        infoPanel.add(createSmallInfoLabel("1박당 가격: " + String.format("%,d원", room.getPricePerNight())));
+        infoPanel.add(createSmallInfoLabel("최대 인원: " + room.getCapacity() + "명"));
+        infoPanel.add(createSmallInfoLabel("호텔 ID: " + room.getHotelId()));
+
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(infoPanel, BorderLayout.CENTER);
+
+        return card;
+    }
+
+    // 주변 관광지 카드 생성
+    private JPanel createAttractionCard(Attraction attraction) {
+        JPanel card = new JPanel(new BorderLayout(8, 5));
+        card.setBackground(cardBg);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(cardLine),
+                new EmptyBorder(12, 14, 12, 14)
+        ));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 105));
+
+        JLabel nameLabel = new JLabel("● " + safeText(attraction.getAttractionName()));
+        nameLabel.setFont(new Font("맑은 고딕", Font.BOLD, 16));
+        nameLabel.setForeground(titleColor);
+
+        JTextArea descArea = new JTextArea();
+        descArea.setEditable(false);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
+        descArea.setForeground(subTextColor);
+        descArea.setBackground(cardBg);
+        descArea.setBorder(BorderFactory.createEmptyBorder());
+
+        descArea.setText(safeText(attraction.getADescription()));
+
+        card.add(nameLabel, BorderLayout.NORTH);
+        card.add(descArea, BorderLayout.CENTER);
+
+        return card;
+    }
+
+    // 리뷰 카드 생성
+    private JPanel createReviewCard(Review review) {
+        JPanel card = new JPanel(new BorderLayout(8, 8));
+        card.setBackground(cardBg);
+        card.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(cardLine),
+                new EmptyBorder(12, 14, 12, 14)
+        ));
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 125));
+
+        JLabel topLabel = new JLabel("★ " + review.getRating() + "점    |    " + review.getReviewDate());
+        topLabel.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        topLabel.setForeground(new Color(200, 130, 20));
+
+        JTextArea reviewText = new JTextArea(safeText(review.getReview()));
+        reviewText.setEditable(false);
+        reviewText.setLineWrap(true);
+        reviewText.setWrapStyleWord(true);
+        reviewText.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        reviewText.setForeground(titleColor);
+        reviewText.setBackground(cardBg);
+        reviewText.setBorder(BorderFactory.createEmptyBorder());
+
+        card.add(topLabel, BorderLayout.NORTH);
+        card.add(reviewText, BorderLayout.CENTER);
+
+        return card;
+    }
+
+    private JLabel createSmallInfoLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
+        label.setForeground(subTextColor);
+        return label;
+    }
+
+    private JLabel createEmptyLabel(String text) {
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
+        label.setForeground(subTextColor);
+        return label;
+    }
+
+    private JButton createMenuButton(String text) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(new Dimension(120, 45));
+        button.setBackground(buttonBlue);
+        button.setForeground(Color.BLACK);
+        button.setFont(new Font("맑은 고딕", Font.BOLD, 14));
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createLineBorder(new Color(120, 150, 180)));
+        return button;
+    }
+
+    // 호텔 기본 정보와 주변 관광지 정보를 불러옴
+    private void loadHotelInfo() {
+        if (hotelId == 0) {
+            hotelNameLabel.setText("호텔명: ");
+            locationLabel.setText("위치: ");
+            contactLabel.setText("연락처: ");
+            ratingLabel.setText("평균 별점: ");
+
+            if (descriptionArea != null) {
+                descriptionArea.setText("");
+            }
+
+            if (attractionListPanel != null) {
+                attractionListPanel.removeAll();
+                attractionListPanel.add(createEmptyLabel("호텔을 선택해주세요."));
+                attractionListPanel.revalidate();
+                attractionListPanel.repaint();
+            }
+
             return;
         }
 
-        // 기본 정보 탭 업데이트
-        double avgRating = hotelService.getAvgRating(hotelId);
-        String stars     = hotelService.formatStars((int) Math.round(avgRating));
-        lblHotelName .setText(hotel.getHotelName());
-        lblLocation  .setText(hotel.getLocation());
-        lblContact   .setText(hotel.getContact());
-        lblAvgRating .setText(stars + String.format("  (%.1f / 5.0)", avgRating));
-        taDescription.setText(hotel.getHDescription() != null ? hotel.getHDescription() : "-");
+        Hotel hotel = hotelService.getHotelDetail(hotelId);
 
-        List<Attraction> attractions = hotelService.getAttractionsByHotelId(hotelId);
-        if (attractions.isEmpty()) {
-            lblAttractions.setText("-");
+        if (hotel == null) {
+            JOptionPane.showMessageDialog(this, "호텔 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        double avgRating = hotelService.getAverageRatingByHotelId(hotelId);
+        List<Attraction> attractions = hotelService.getNearbyAttractions(hotelId);
+
+        hotelNameLabel.setText("호텔명: " + safeText(hotel.getHotelName()));
+        locationLabel.setText("위치: " + safeText(hotel.getLocation()));
+        contactLabel.setText("연락처: " + safeText(hotel.getContact()));
+        ratingLabel.setText(String.format("평균 별점: %.1f", avgRating));
+
+        descriptionArea.setText(safeText(hotel.getHDescription()));
+
+        attractionListPanel.removeAll();
+
+        if (attractions == null || attractions.isEmpty()) {
+            attractionListPanel.add(createEmptyLabel("주변 관광지 정보가 없습니다."));
         } else {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < attractions.size(); i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(attractions.get(i).getAttractionName());
+            for (Attraction attraction : attractions) {
+                attractionListPanel.add(createAttractionCard(attraction));
+                attractionListPanel.add(Box.createVerticalStrut(10));
             }
-            lblAttractions.setText(sb.toString());
         }
 
-        // 룸 정보 탭 업데이트
-        roomTableModel.setRowCount(0);
-        List<Room> rooms = hotelService.getRoomsByHotelId(hotelId);
-        for (Room room : rooms) {
-            roomTableModel.addRow(new Object[]{
-                    room.getRoomNumber(),
-                    room.getType(),
-                    String.format("%,d", room.getPricePerNight()),
-                    room.getCapacity() + "명"
-            });
-        }
-
-        // 리뷰 탭 업데이트
-        reviewTableModel.setRowCount(0);
-        List<Review> reviews = hotelService.getReviewsByHotelId(hotelId);
-        for (Review rv : reviews) {
-            String stars5 = hotelService.formatStars(rv.getRating());
-            reviewTableModel.addRow(new Object[]{
-                    rv.getReviewId(),
-                    stars5,
-                    rv.getReviewDate() != null ? rv.getReviewDate().toString() : "-",
-                    rv.getReview()
-            });
-        }
+        attractionListPanel.revalidate();
+        attractionListPanel.repaint();
     }
 
-    /**
-     * 호텔 미선택 상태의 초기 안내 화면을 표시합니다.
-     */
-    private void showPlaceholder() {
-        lblHotelName .setText("지도에서 호텔을 선택해주세요.");
-        lblLocation  .setText("-");
-        lblContact   .setText("-");
-        lblAvgRating .setText("-");
-        lblAttractions.setText("-");
-        taDescription.setText("");
-        if (roomTableModel   != null) roomTableModel.setRowCount(0);
-        if (reviewTableModel != null) reviewTableModel.setRowCount(0);
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    // 리스너 등록
-    // ────────────────────────────────────────────────────────────────────
-
-    /**
-     * 예약 버튼 클릭 리스너를 등록합니다.
-     * @param listener ReservationListener 구현체
-     */
-    public void setReservationListener(ReservationListener listener) {
-        this.reservationListener = listener;
-    }
-
-    // ────────────────────────────────────────────────────────────────────
-    // 내부 헬퍼
-    // ────────────────────────────────────────────────────────────────────
-
-    private JLabel makeLabel(String text, Font font) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(font);
-        return lbl;
+    private String safeText(String text) {
+        return text == null || text.isBlank() ? "-" : text;
     }
 }

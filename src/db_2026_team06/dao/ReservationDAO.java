@@ -185,7 +185,7 @@ public class ReservationDAO {
 
     /**
      * GUI 예약 시스템에서 호출되는 메서드로, 고객 정보 저장과 예약 생성을 하나의 트랜잭션으로 처리합니다.
-     * 둘 중 하나라도 실패하면 전체 롤백합니다. (요구사항 9번 - 트랜잭션)
+     * 둘 중 하나라도 실패하면 전체 롤백합니다.
      */
     public int createReservation(Customer customer, int roomNumber,
                                  LocalDate checkIn, LocalDate checkOut, int guests) {
