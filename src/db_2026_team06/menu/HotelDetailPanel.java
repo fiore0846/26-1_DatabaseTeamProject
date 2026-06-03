@@ -243,10 +243,10 @@ public class HotelDetailPanel extends JPanel {
         List<Room> rooms = hotelService.getRoomsByHotelId(hotelId);
         for (Room room : rooms) {
             roomTableModel.addRow(new Object[]{
-                room.getRoomNumber(),
-                room.getType(),
-                String.format("%,d", room.getPricePerNight()),
-                room.getCapacity() + "명"
+                    room.getRoomNumber(),
+                    room.getType(),
+                    String.format("%,d", room.getPricePerNight()),
+                    room.getCapacity() + "명"
             });
         }
 
@@ -256,10 +256,10 @@ public class HotelDetailPanel extends JPanel {
         for (Review rv : reviews) {
             String stars5 = hotelService.formatStars(rv.getRating());
             reviewTableModel.addRow(new Object[]{
-                rv.getReviewId(),
-                stars5,
-                rv.getReviewDate() != null ? rv.getReviewDate().toString() : "-",
-                rv.getReview()
+                    rv.getReviewId(),
+                    stars5,
+                    rv.getReviewDate() != null ? rv.getReviewDate().toString() : "-",
+                    rv.getReview()
             });
         }
     }

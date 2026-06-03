@@ -16,19 +16,22 @@ import java.util.List;
  * 예약 화면 패널
  *
  * 화면 흐름 (요구사항 명시 예약 기능 흐름):
- *   호텔 선택(완료) → 날짜/인원 입력 → 예약 가능 룸 조회
- *   → 룸 선택 → 고객 정보 입력 → 예약 생성 → 결과 확인
+ * 호텔 선택(완료) → 날짜/인원 입력 → 예약 가능 룸 조회
+ * → 룸 선택 → 고객 정보 입력 → 예약 생성 → 결과 확인
  *
  * 구현된 기능:
- *   - Insert : 예약 생성 (트랜잭션 포함)
- *   - Update : 예약 날짜/인원 수정
- *   - Delete : 예약 취소
- *   - Select : 예약 가능 룸 조회, 예약 결과 조회 (뷰 사용)
+ * - Insert : 예약 생성 (트랜잭션 포함)
+ * - Update : 예약 날짜/인원 수정
+ * - Delete : 예약 취소
+ * - Select : 예약 가능 룸 조회, 예약 결과 조회 (뷰 사용)
  */
 public class ReservationPanel extends JPanel {
 
     private final ReservationService reservationService;
     private final HotelService       hotelService;
+
+    // 현재 시스템에 로그인되어 인증을 마친 사용자 세션 객체를 보관합니다.
+    private Customer loggedInCustomer;
 
     // 현재 선택된 호텔 ID (HotelExplorePanel에서 전달받음)
     private int targetHotelId = -1;
@@ -191,7 +194,7 @@ public class ReservationPanel extends JPanel {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createTitledBorder(
                 BorderFactory.createLineBorder(new Color(180,180,180)),
-                "③ 고객 정보 입력", 0, 0,
+                "③ 고객 정보 확인", 0, 0,
                 new Font("맑은 고딕", Font.BOLD, 12)));
         GridBagConstraints g = new GridBagConstraints();
         g.insets = new Insets(5,8,5,8);
@@ -274,7 +277,7 @@ public class ReservationPanel extends JPanel {
         g.gridx=2; g.gridy=2;
         JButton btnUpdate = makeBtn("예약 수정", new Color(50,120,220));
         btnUpdate.addActionListener(e ->
-            onUpdateReservation(tfReservationId, tfNewCheckIn, tfNewCheckOut, spNewGuests));
+                onUpdateReservation(tfReservationId, tfNewCheckIn, tfNewCheckOut, spNewGuests));
         panel.add(btnUpdate, g);
 
         // 취소 버튼
@@ -314,8 +317,8 @@ public class ReservationPanel extends JPanel {
     private void onSearchRooms() {
         if (targetHotelId == -1) {
             JOptionPane.showMessageDialog(this,
-                "호텔 탐색 화면에서 호텔을 먼저 선택해주세요.", "안내",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "호텔 탐색 화면에서 호텔을 먼저 선택해주세요.", "안내",
+                    JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         LocalDate checkIn, checkOut;
@@ -324,8 +327,8 @@ public class ReservationPanel extends JPanel {
             checkOut = LocalDate.parse(tfCheckOut.getText().trim());
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this,
-                "날짜 형식이 올바르지 않습니다.\nYYYY-MM-DD 형식으로 입력해주세요.", "오류",
-                JOptionPane.ERROR_MESSAGE);
+                    "날짜 형식이 올바르지 않습니다.\nYYYY-MM-DD 형식으로 입력해주세요.", "오류",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
         String err = reservationService.validateDates(checkIn, checkOut);
@@ -341,15 +344,15 @@ public class ReservationPanel extends JPanel {
         roomTableModel.setRowCount(0);
         if (rooms.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                "선택한 조건에 예약 가능한 룸이 없습니다.", "조회 결과",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "선택한 조건에 예약 가능한 룸이 없습니다.", "조회 결과",
+                    JOptionPane.INFORMATION_MESSAGE);
         } else {
             for (Room r : rooms) {
                 roomTableModel.addRow(new Object[]{
-                    r.getRoomNumber(),
-                    r.getType(),
-                    String.format("%,d", r.getPricePerNight()),
-                    r.getCapacity() + "명"
+                        r.getRoomNumber(),
+                        r.getType(),
+                        String.format("%,d", r.getPricePerNight()),
+                        r.getCapacity() + "명"
                 });
             }
         }
@@ -361,7 +364,7 @@ public class ReservationPanel extends JPanel {
         int selectedRow = roomTable.getSelectedRow();
         if (selectedRow == -1) {
             JOptionPane.showMessageDialog(this,
-                "룸을 선택해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
+                    "룸을 선택해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         int roomNumber = (int) roomTableModel.getValueAt(selectedRow, 0);
@@ -373,21 +376,19 @@ public class ReservationPanel extends JPanel {
             checkOut = LocalDate.parse(tfCheckOut.getText().trim());
         } catch (DateTimeParseException ex) {
             JOptionPane.showMessageDialog(this,
-                "날짜 형식을 확인해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
+                    "날짜 형식을 확인해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // 고객 정보 확인
-        String name  = tfName.getText().trim();
-        String email = tfEmail.getText().trim();
-        String phone = tfPhone.getText().trim();
-        if (name.isEmpty() || email.isEmpty()) {
+        // 로그인된 세션 상태를 검증하여 정상적인 사용자인지 확인합니다.
+        if (this.loggedInCustomer == null) {
             JOptionPane.showMessageDialog(this,
-                "이름과 이메일은 필수 입력 항목입니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                    "로그인 정보가 만료되었거나 접근 권한이 없습니다.", "인증 오류", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        Customer customer = new Customer(0, name, email, phone);
+        // 입력된 텍스트 대신, 안전한 세션에 보관된 고객 객체를 예약 서비스로 전달합니다.
+        Customer customer = this.loggedInCustomer;
         int guests = (int) spGuests.getValue();
 
         // 예약 생성 (트랜잭션)
@@ -396,13 +397,13 @@ public class ReservationPanel extends JPanel {
 
         if (result == -2) {
             JOptionPane.showMessageDialog(this,
-                "선택한 기간에 이미 예약이 있습니다.\n다른 날짜나 룸을 선택해주세요.",
-                "예약 불가", JOptionPane.WARNING_MESSAGE);
+                    "선택한 기간에 이미 예약이 있습니다.\n다른 날짜나 룸을 선택해주세요.",
+                    "예약 불가", JOptionPane.WARNING_MESSAGE);
             return;
         }
         if (result == -1) {
             JOptionPane.showMessageDialog(this,
-                "예약 생성 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
+                    "예약 생성 중 오류가 발생했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -415,24 +416,24 @@ public class ReservationPanel extends JPanel {
             int total = reservationService.calcTotalPrice(pricePerNight, checkIn, checkOut);
 
             taResult.setText(
-                "╔══════════════════════════════════════╗\n" +
-                "  ✅ 예약이 완료되었습니다!\n" +
-                "╚══════════════════════════════════════╝\n" +
-                "  예약 ID   : " + result        + "\n" +
-                "  호텔명    : " + detail[0]      + "\n" +
-                "  룸 유형   : " + detail[1]      + "\n" +
-                "  체크인    : " + detail[2]      + "\n" +
-                "  체크아웃  : " + detail[3]      + "\n" +
-                "  인원      : " + detail[4] + "명\n" +
-                "  총 요금   : " + String.format("%,d", total) + "원\n" +
-                "  예약자    : " + detail[6]
+                    "╔══════════════════════════════════════╗\n" +
+                            "  ✅ 예약이 완료되었습니다!\n" +
+                            "╚══════════════════════════════════════╝\n" +
+                            "  예약 ID   : " + result        + "\n" +
+                            "  호텔명    : " + detail[0]      + "\n" +
+                            "  룸 유형   : " + detail[1]      + "\n" +
+                            "  체크인    : " + detail[2]      + "\n" +
+                            "  체크아웃  : " + detail[3]      + "\n" +
+                            "  인원      : " + detail[4] + "명\n" +
+                            "  총 요금   : " + String.format("%,d", total) + "원\n" +
+                            "  예약자    : " + detail[6]
             );
         }
     }
 
     /** 예약 수정 버튼 */
     private void onUpdateReservation(JTextField tfId, JTextField tfCi,
-                                      JTextField tfCo, JSpinner spG) {
+                                     JTextField tfCo, JSpinner spG) {
         try {
             int id = Integer.parseInt(tfId.getText().trim());
             LocalDate ci = LocalDate.parse(tfCi.getText().trim());
@@ -441,8 +442,8 @@ public class ReservationPanel extends JPanel {
 
             boolean ok = reservationService.updateReservation(id, ci, co, g);
             manageResultArea.setText(ok
-                ? "✅ 예약 ID " + id + " 수정 완료\n체크인: " + ci + "  체크아웃: " + co
-                : "❌ 수정 실패. 예약 ID를 확인해주세요.");
+                    ? "✅ 예약 ID " + id + " 수정 완료\n체크인: " + ci + "  체크아웃: " + co
+                    : "❌ 수정 실패. 예약 ID를 확인해주세요.");
         } catch (Exception ex) {
             manageResultArea.setText("❌ 입력값 오류: " + ex.getMessage());
         }
@@ -453,14 +454,14 @@ public class ReservationPanel extends JPanel {
         try {
             int id = Integer.parseInt(tfId.getText().trim());
             int confirm = JOptionPane.showConfirmDialog(this,
-                "예약 ID " + id + " 를 취소하시겠습니까?",
-                "예약 취소 확인", JOptionPane.YES_NO_OPTION);
+                    "예약 ID " + id + " 를 취소하시겠습니까?",
+                    "예약 취소 확인", JOptionPane.YES_NO_OPTION);
             if (confirm != JOptionPane.YES_OPTION) return;
 
             boolean ok = reservationService.cancelReservation(id);
             manageResultArea.setText(ok
-                ? "✅ 예약 ID " + id + " 취소 완료"
-                : "❌ 취소 실패. 예약 ID를 확인해주세요.");
+                    ? "✅ 예약 ID " + id + " 취소 완료"
+                    : "❌ 취소 실패. 예약 ID를 확인해주세요.");
         } catch (NumberFormatException ex) {
             manageResultArea.setText("❌ 예약 ID는 숫자로 입력해주세요.");
         }
@@ -469,6 +470,29 @@ public class ReservationPanel extends JPanel {
     // ────────────────────────────────────────────────────────────────────
     // 외부 연동 메서드
     // ────────────────────────────────────────────────────────────────────
+
+    /**
+     * 메인 프레임 등에서 성공적으로 로그인된 사용자의 정보를 이 패널에 주입합니다.
+     * 주입된 고객 정보는 UI 텍스트 필드에 고정 출력되며 사용자가 임의로 변조할 수 없습니다.
+     * * @param customer 세션에 보관된 현재 로그인 유저
+     */
+    public void setLoggedInCustomer(Customer customer) {
+        this.loggedInCustomer = customer;
+        if (customer != null) {
+            tfName.setText(customer.getName());
+            tfEmail.setText(customer.getEmail());
+            tfPhone.setText(customer.getPhone() != null ? customer.getPhone() : "");
+
+            tfName.setEditable(false);
+            tfEmail.setEditable(false);
+            tfPhone.setEditable(false);
+
+            Color readOnlyColor = new Color(240, 240, 240);
+            tfName.setBackground(readOnlyColor);
+            tfEmail.setBackground(readOnlyColor);
+            tfPhone.setBackground(readOnlyColor);
+        }
+    }
 
     /**
      * 호텔 탐색 화면에서 예약 버튼 클릭 시 호출됩니다.
@@ -482,7 +506,7 @@ public class ReservationPanel extends JPanel {
         if (hotel != null) {
             tfCheckIn.setToolTipText("선택된 호텔: " + hotel.getHotelName());
             taResult.setText("선택된 호텔: " + hotel.getHotelName()
-                + "\n\n날짜와 인원을 입력하고 [예약 가능 룸 조회] 버튼을 눌러주세요.");
+                    + "\n\n날짜와 인원을 입력하고 [예약 가능 룸 조회] 버튼을 눌러주세요.");
         }
         // 이전 룸 목록 초기화
         roomTableModel.setRowCount(0);

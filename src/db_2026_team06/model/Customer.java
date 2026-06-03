@@ -10,7 +10,7 @@ public class Customer {
     // 생성자
     public Customer() {}
 
-    public Customer(int customerId, String name, String email, String phone) {
+    public Customer(int customerId, String name, String email, String phone, String password) {
         this.customerId = customerId;
         this.name = name;
         this.email = email;
@@ -24,4 +24,10 @@ public class Customer {
     public String getEmail() { return email; }
     public String getPhone() { return phone; }
     public String getPassword() { return password; }
+
+    public void setCustomerId(int customerId) {this.customerId = customerId;}
+    public void setEmail(String email) {this.email = email;}
+    public void setName(String name) {this.name = name;}
+    public void setPassword(String password) {this.password = password;}
+    public void setPhone(String phone) {this.phone = phone;}
 }

@@ -17,7 +17,7 @@ public class AuthGUI extends JFrame {
     private JTextField regPhoneField;
     private JPasswordField regPasswordField;
 
-    //이메일 중복 검사 통과 여부를 저장
+    // 이메일 중복 검사 통과 여부를 저장
     private boolean isEmailVerified = false;
     private String verifiedEmail = "";
 
@@ -155,7 +155,7 @@ public class AuthGUI extends JFrame {
         return panel;
     }
 
-    //기능 로직
+    // 기능 로직
 
     private void handleLogin() {
         String email = loginEmailField.getText().trim();
@@ -163,7 +163,12 @@ public class AuthGUI extends JFrame {
 
         if (authService.login(email, password)) {
             JOptionPane.showMessageDialog(this, authService.getLoggedInCustomer().getName() + "님, 환영합니다!", "성공", JOptionPane.INFORMATION_MESSAGE);
-            this.dispose();
+
+            // 로그인 성공 시 MainFrame을 생성하고 사용자 정보를 전달하여 화면을 띄웁니다.
+            MainFrame mainFrame = new MainFrame(authService.getLoggedInCustomer());
+            mainFrame.setVisible(true);
+
+            this.dispose(); // 기존 로그인 창 닫기
         } else {
             JOptionPane.showMessageDialog(this, "이메일 또는 비밀번호를 다시 확인해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
         }
@@ -199,7 +204,7 @@ public class AuthGUI extends JFrame {
             return;
         }
 
-        //중복 확인을 안 했거나, 중복 확인을 한 후 이메일을 수정해버린 경우 예외 처리
+        // 중복 확인을 안 했거나, 중복 확인을 한 후 이메일을 수정해버린 경우 예외 처리
         if (!isEmailVerified || !email.equals(verifiedEmail)) {
             JOptionPane.showMessageDialog(this, "이메일 중복 확인을 완료해 주세요.", "알림", JOptionPane.WARNING_MESSAGE);
             return;
