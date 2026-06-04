@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ReviewDAO {
 
-    // 특정 호텔의 리뷰 목록 조회 (JOIN 포함 병합)
+    // 특정 호텔의 리뷰 목록 조회 (JOIN 사용), 인덱스 사용 쿼리
     public List<Review> getReviewsByHotelId(int hotelId) {
         List<Review> reviewList = new ArrayList<>();
         String sql = """

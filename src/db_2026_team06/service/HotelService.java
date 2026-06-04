@@ -79,18 +79,8 @@ public class HotelService {
      * @param hotelId 조회할 호텔 ID
      * @return 평균 별점 (0.0 ~ 5.0)
      */
-    public double getAvgRating(int hotelId) {
+    public double getAverageRatingByHotelId(int hotelId) {
         return reviewDAO.getAverageRatingByHotelId(hotelId);
-    }
-
-
-    /**
-     * 특정 호텔의 주변 관광지 목록을 반환합니다. (3-way 조인 활용)
-     * @param hotelId 조회할 호텔 ID
-     * @return Attraction 리스트
-     */
-    public List<Attraction> getAttractionsByHotelId(int hotelId) {
-        return attractionDAO.getNearbyAttractions(hotelId);
     }
 
     /**
@@ -107,25 +97,21 @@ public class HotelService {
         return sb.toString();
     }
 
+    //호텔id를 이용해 호텔 1개의 정보를 가져옵니다.
     public Hotel getHotelDetail(int hotelId) {
         return hotelDAO.findHotelById(hotelId);
     }
 
+    //호텔id를 이용해 그 호텔에 속한 방의 정보를 모두 가져옵니다.
     public List<Room> getRoomsByHotelId(int hotelId) {
         return roomDAO.getRoomsByHotelId(hotelId);
     }
 
-    public Room getRoomDetail(int roomNumber) {
-        return roomDAO.getRoomDetail(roomNumber);
-    }
-
+    //호텔id를 이용해 해당 호텔의 리뷰를 전부 가져옵니다.
     public List<Review> getReviewsByHotelId(int hotelId) {
         return reviewDAO.getReviewsByHotelId(hotelId);
     }
 
-    public double getAverageRatingByHotelId(int hotelId) {
-        return reviewDAO.getAverageRatingByHotelId(hotelId);
-    }
-
+    //호텔id를 이용해 해당 호텔 주위의 관광자 목록을 가져옵니다.
     public List<Attraction> getNearbyAttractions(int hotelId) {return attractionDAO.getNearbyAttractions(hotelId); }
 }

@@ -13,8 +13,8 @@ import java.util.List;
 import java.util.function.IntConsumer;
 
 /**
- * 호텔 상세 정보를 보여주는 패널입니다.
- * 호텔 기본 정보, 주변 관광지, 객실 정보, 리뷰 정보를 출력합니다.
+ * 특정 호텔의 상세 정보를 보여주는 패널입니다.
+ * 조인(Join) 및 뷰(View) 쿼리를 통해 가져온 기본 정보, 객실, 리뷰, 주변 관광지 데이터를 출력합니다.
  */
 public class HotelDetailPanel extends JPanel {
     private final HotelService hotelService = new HotelService();
@@ -23,7 +23,7 @@ public class HotelDetailPanel extends JPanel {
     private Runnable backListener;
     private IntConsumer reservationListener;
 
-    // 예약 화면 연동을 위한 인터페이스 및 리스너
+    /** 예약 요청 시 외부(부모 컨테이너)와 통신하기 위한 콜백 인터페이스입니다. */
     public interface ReservationListener {
         void onReservationRequested(int hotelId);
     }
@@ -49,38 +49,48 @@ public class HotelDetailPanel extends JPanel {
     private final Color subTextColor = new Color(90, 100, 115);
     private final Color tabSelectedColor = new Color(220, 236, 250);
 
+    /**
+     * HotelDetailPanel 생성자
+     * 상세 정보 패널의 UI 구조를 초기화합니다.
+     */
     public HotelDetailPanel() {
         initComponents();
     }
 
-    // 호텔 상세 화면으로 넘어올 때 선택된 호텔 ID를 설정
+    /**
+     * 출력할 대상 호텔의 ID를 설정하고 데이터를 갱신합니다.
+     * @param hotelId 조회할 호텔의 기본키(PK)
+     */
     public void setTargetHotel(int hotelId) {
         this.hotelId = hotelId;
         refreshTabs();
         loadHotelInfo();
     }
 
-    // HotelExplorePanel과의 연동을 위한 데이터 갱신 메서드
+    /**
+     * 탐색 패널 등 외부에서 호출하여 호텔 상세 정보를 렌더링합니다.
+     * @param hotelId 출력할 호텔 ID
+     */
     public void showHotelDetail(int hotelId) {
         setTargetHotel(hotelId);
     }
 
-    // 뒤로가기 버튼 동작을 외부에서 연결
+    /** 뒤로가기 버튼 클릭 이벤트 리스너를 등록합니다. */
     public void setBackListener(Runnable backListener) {
         this.backListener = backListener;
     }
 
-    // 예약하기 버튼 동작을 외부에서 연결 (IntConsumer 방식)
+    /** (하위 호환용) 예약 버튼 클릭 이벤트 리스너를 등록합니다. */
     public void setReservationListener(IntConsumer reservationListener) {
         this.reservationListener = reservationListener;
     }
 
-    // 예약하기 버튼 동작을 외부에서 연결 (커스텀 인터페이스 방식)
+    /** 예약 버튼 클릭 이벤트 리스너를 등록합니다. */
     public void setReservationListener(ReservationListener listener) {
         this.customReservationListener = listener;
     }
 
-    // 전체 화면 구성
+    /** 패널의 기본 레이아웃과 탭 뷰를 구성합니다. */
     private void initComponents() {
         setLayout(new BorderLayout(12, 12));
         setBackground(bgColor);
@@ -100,7 +110,9 @@ public class HotelDetailPanel extends JPanel {
         loadHotelInfo();
     }
 
-    // 상단 호텔 정보와 버튼 영역
+    /** * 상단의 호텔 이름, 평점, 연락처 요약 영역과 제어 버튼 영역을 생성합니다.
+     * @return 요약 정보가 포함된 JPanel
+     */
     private JPanel createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout(15, 10));
         topPanel.setBackground(lightBlue);
@@ -134,7 +146,6 @@ public class HotelDetailPanel extends JPanel {
 
         JButton reservationButton = createMenuButton("예약하기");
         reservationButton.addActionListener(e -> {
-            // 등록된 리스너의 타입에 맞게 이벤트 전달
             if (customReservationListener != null) {
                 customReservationListener.onReservationRequested(hotelId);
             } else if (reservationListener != null) {
@@ -160,7 +171,7 @@ public class HotelDetailPanel extends JPanel {
         return topPanel;
     }
 
-    // 탭 내용 새로고침
+    /** 호텔 아이디 변경 시 하단 탭의 데이터를 갱신합니다. */
     private void refreshTabs() {
         if (tabbedPane == null) {
             return;
@@ -172,7 +183,9 @@ public class HotelDetailPanel extends JPanel {
         tabbedPane.addTab("리뷰", createReviewPanel());
     }
 
-    // 호텔 소개와 주변 관광지 화면
+    /** * 호텔 소개 및 조인 쿼리로 획득한 주변 관광지 정보를 표시하는 패널을 생성합니다.
+     * @return 기본 정보 JPanel
+     */
     private JPanel createBasicInfoPanel() {
         JPanel panel = new JPanel(new GridLayout(1, 2, 12, 0));
         panel.setBackground(bgColor);
@@ -214,7 +227,9 @@ public class HotelDetailPanel extends JPanel {
         return panel;
     }
 
-    // 룸 정보를 카드 형태로 출력
+    /** * 해당 호텔의 모든 객실 목록을 카드 레이아웃 형태로 렌더링하는 패널을 반환합니다.
+     * @return 룸 정보 JPanel
+     */
     private JPanel createRoomPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(bgColor);
@@ -249,7 +264,9 @@ public class HotelDetailPanel extends JPanel {
         return panel;
     }
 
-    // 리뷰를 카드 형태로 출력
+    /** * 해당 호텔의 리뷰 목록을 최신순으로 렌더링하는 패널을 반환합니다.
+     * @return 리뷰 정보 JPanel
+     */
     private JPanel createReviewPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(bgColor);
@@ -284,7 +301,7 @@ public class HotelDetailPanel extends JPanel {
         return panel;
     }
 
-    // 호텔 소개, 주변 관광지 같은 구역 패널 생성
+    /** UI 구역 생성을 위한 헬퍼 메서드입니다. */
     private JPanel createSectionPanel(String title) {
         JPanel sectionPanel = new JPanel(new BorderLayout(0, 10));
         sectionPanel.setBackground(panelWhite);
@@ -303,7 +320,7 @@ public class HotelDetailPanel extends JPanel {
         return sectionPanel;
     }
 
-    // 객실 카드 생성
+    /** 개별 객실 정보를 나타내는 컴포넌트를 생성합니다. */
     private JPanel createRoomCard(Room room) {
         JPanel card = new JPanel(new BorderLayout(10, 8));
         card.setBackground(cardBg);
@@ -331,7 +348,7 @@ public class HotelDetailPanel extends JPanel {
         return card;
     }
 
-    // 주변 관광지 카드 생성
+    /** 개별 관광지 정보를 나타내는 컴포넌트를 생성합니다. */
     private JPanel createAttractionCard(Attraction attraction) {
         JPanel card = new JPanel(new BorderLayout(8, 5));
         card.setBackground(cardBg);
@@ -362,7 +379,7 @@ public class HotelDetailPanel extends JPanel {
         return card;
     }
 
-    // 리뷰 카드 생성
+    /** 개별 리뷰 정보를 나타내는 컴포넌트를 생성합니다. */
     private JPanel createReviewCard(Review review) {
         JPanel card = new JPanel(new BorderLayout(8, 8));
         card.setBackground(cardBg);
@@ -391,6 +408,7 @@ public class HotelDetailPanel extends JPanel {
         return card;
     }
 
+    /** UI 텍스트 출력을 위한 헬퍼 메서드입니다. */
     private JLabel createSmallInfoLabel(String text) {
         JLabel label = new JLabel(text);
         label.setFont(new Font("맑은 고딕", Font.PLAIN, 13));
@@ -398,6 +416,7 @@ public class HotelDetailPanel extends JPanel {
         return label;
     }
 
+    /** 데이터가 없을 때 표시할 빈 라벨을 생성합니다. */
     private JLabel createEmptyLabel(String text) {
         JLabel label = new JLabel(text, SwingConstants.CENTER);
         label.setFont(new Font("맑은 고딕", Font.PLAIN, 14));
@@ -405,6 +424,7 @@ public class HotelDetailPanel extends JPanel {
         return label;
     }
 
+    /** 공통 디자인이 적용된 메뉴 버튼을 생성합니다. */
     private JButton createMenuButton(String text) {
         JButton button = new JButton(text);
         button.setPreferredSize(new Dimension(120, 45));
@@ -416,7 +436,9 @@ public class HotelDetailPanel extends JPanel {
         return button;
     }
 
-    // 호텔 기본 정보와 주변 관광지 정보를 불러옴
+    /**
+     * 현재 설정된 hotelId를 바탕으로 DB에서 호텔 상세 정보 및 평균 별점을 조회하여 UI에 반영합니다.
+     */
     private void loadHotelInfo() {
         if (hotelId == 0) {
             hotelNameLabel.setText("호텔명: ");
@@ -451,7 +473,9 @@ public class HotelDetailPanel extends JPanel {
         hotelNameLabel.setText("호텔명: " + safeText(hotel.getHotelName()));
         locationLabel.setText("위치: " + safeText(hotel.getLocation()));
         contactLabel.setText("연락처: " + safeText(hotel.getContact()));
-        ratingLabel.setText(String.format("평균 별점: %.1f", avgRating));
+        int roundedRating = (int) Math.round(avgRating);
+        String stars = hotelService.formatStars(roundedRating);
+        ratingLabel.setText(String.format("평균 별점: %s (%.1f)", stars, avgRating));
 
         descriptionArea.setText(safeText(hotel.getHDescription()));
 
@@ -470,6 +494,7 @@ public class HotelDetailPanel extends JPanel {
         attractionListPanel.repaint();
     }
 
+    /** null 데이터 처리를 위한 헬퍼 메서드입니다. */
     private String safeText(String text) {
         return text == null || text.isBlank() ? "-" : text;
     }

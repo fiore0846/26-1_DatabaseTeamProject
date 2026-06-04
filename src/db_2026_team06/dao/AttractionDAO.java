@@ -14,7 +14,7 @@ public class AttractionDAO {
 
     /**
      * 특정 호텔 주변의 관광지 정보를 가져오는 메서드
-     * (요구사항 11번 조인 충족을 위해 3-way JOIN 쿼리 병합)
+     * (요구사항 11번 조인 충족을 위해 JOIN 쿼리 병합)
      */
     public List<Attraction> getNearbyAttractions(int hotelId) {
         List<Attraction> attractionList = new ArrayList<>();

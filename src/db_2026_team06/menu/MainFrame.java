@@ -10,19 +10,18 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
- * 데이터베이스 응용프로그램 메인 프레임
- * JTabbedPane(탭)을 활용하여 [호텔 탐색] ↔ [마이페이지]를 이동하고,
- * 예약 시에는 카드 레이아웃으로 [예약 화면]을 띄웁니다.
+ * 응용프로그램의 전체 레이아웃과 화면 전환 흐름을 통제하는 메인 프레임 클래스입니다.
+ * JTabbedPane을 활용하여 메인 화면과 마이페이지를 구분하고,
+ * 예약 프로세스 진입 시 CardLayout을 통해 예약 전용 화면으로 전환합니다.
  */
 public class MainFrame extends JFrame {
 
-    // 화면 구분을 위한 상수
     private static final String SCREEN_MAIN        = "MAIN_TABS";
     private static final String SCREEN_RESERVATION = "RESERVATION";
 
     private final CardLayout        cardLayout;
     private final JPanel            cardPanel;
-    private final JTabbedPane       mainTabs; // [추가] 메인 화면용 탭
+    private final JTabbedPane       mainTabs;
 
     private final HotelExplorePanel explorePanel;
     private final ReservationPanel  reservationPanel;
@@ -31,6 +30,11 @@ public class MainFrame extends JFrame {
     private final ReservationService reservationService;
     private Customer loggedInCustomer;
 
+    /**
+     * MainFrame 생성자
+     * 로그인 과정에서 생성된 세션(Customer) 객체를 주입받아 애플리케이션을 초기화합니다.
+     * @param loggedInCustomer 인증을 완료한 사용자 객체
+     */
     public MainFrame(Customer loggedInCustomer) {
         this.loggedInCustomer = loggedInCustomer;
 
@@ -40,66 +44,55 @@ public class MainFrame extends JFrame {
 
         reservationService = new ReservationService();
 
-        // ── 패널 초기화 ───────────────────────────────────────────────
         cardLayout       = new CardLayout();
         cardPanel        = new JPanel(cardLayout);
 
-        // 팀원의 디자인을 차용한 메인 탭 생성
         mainTabs         = new JTabbedPane();
         mainTabs.setFont(new Font("맑은 고딕", Font.BOLD, 15));
         mainTabs.setBackground(Color.WHITE);
-        UIManager.put("TabbedPane.selected", new Color(220, 236, 250)); // 선택된 탭 색상 (연한 파란색)
+        UIManager.put("TabbedPane.selected", new Color(220, 236, 250));
 
         explorePanel     = new HotelExplorePanel();
         reservationPanel = new ReservationPanel();
         myPagePanel      = new MyPagePanel(reservationService);
 
-        // 로그인 정보 주입
         explorePanel.setLoggedInCustomer(loggedInCustomer);
         reservationPanel.setLoggedInCustomer(loggedInCustomer);
 
-        // ── 탭에 화면 등록 ────────────────────────────────────────────
         mainTabs.addTab("   호텔 탐색   ", explorePanel);
         mainTabs.addTab("   마이페이지   ", myPagePanel);
 
-        // 마이페이지 탭을 클릭했을 때의 동작 설정
+        // 마이페이지 탭 클릭 시 접근 권한을 확인하고 예약 내역을 동기화합니다.
         mainTabs.addChangeListener(e -> {
-            if (mainTabs.getSelectedIndex() == 1) { // 1번 탭(마이페이지)을 눌렀을 때
+            if (mainTabs.getSelectedIndex() == 1) {
                 if (this.loggedInCustomer == null) {
                     JOptionPane.showMessageDialog(this, "로그인이 필요합니다.", "안내", JOptionPane.WARNING_MESSAGE);
-                    mainTabs.setSelectedIndex(0); // 로그인이 안 되어있으면 다시 탐색 탭으로 튕겨냄
+                    mainTabs.setSelectedIndex(0);
                 } else {
-                    // 로그인이 되어있다면 최신 예약 정보를 불러옴
                     myPagePanel.setLoggedInCustomer(this.loggedInCustomer);
                 }
             }
         });
 
-        // ── 카드 레이아웃에 등록 ──────────────────────────────────────
-        // 구조: 카드 1장 = (탐색+마이페이지 탭) / 카드 2장 = (예약화면)
         cardPanel.add(mainTabs,         SCREEN_MAIN);
         cardPanel.add(reservationPanel, SCREEN_RESERVATION);
 
-        // ── 화면 전환 로직 연결 ───────────────────────────────────────
-        // 1. 호텔 탐색 → 예약 화면 진입
         explorePanel.setReservationListener(hotelId -> {
             reservationPanel.setTargetHotel(hotelId);
             showScreen(SCREEN_RESERVATION);
         });
 
-        // 2. 예약 화면에서 뒤로가기 클릭 시 → 다시 탭 화면으로 복귀
         reservationPanel.setBackListener(() -> showScreen(SCREEN_MAIN));
 
-        // 3. 예약 완료 시 → 마이페이지 탭으로 강제 이동!
         reservationPanel.setReservationSuccessListener(() -> {
             myPagePanel.setLoggedInCustomer(this.loggedInCustomer);
-            mainTabs.setSelectedIndex(1); // 마이페이지 탭으로 강제 전환
-            showScreen(SCREEN_MAIN);      // 탭 화면 보여주기
+            mainTabs.setSelectedIndex(0);
+            showScreen(SCREEN_MAIN);
         });
 
         add(cardPanel, BorderLayout.CENTER);
 
-        // ── 창 닫기 처리 ──────────────────────────────────────────────
+        // 애플리케이션 종료 시 DB Connection 자원을 반환합니다.
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -114,14 +107,23 @@ public class MainFrame extends JFrame {
         showScreen(SCREEN_MAIN);
     }
 
+    /**
+     * CardLayout을 사용하여 지정된 이름의 패널로 화면을 즉시 전환합니다.
+     * @param screenName 전환할 화면의 등록 이름
+     */
     public void showScreen(String screenName) {
         cardLayout.show(cardPanel, screenName);
     }
 
+    /**
+     * 프로그램 단독 실행 및 UI 렌더링 테스트를 위한 메인 진입점입니다.
+     */
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) { /* 기본 LAF 사용 */ }
+        } catch (Exception e) {
+            // 기본 Look And Feel 사용
+        }
 
         SwingUtilities.invokeLater(() -> new MainFrame(null).setVisible(true));
     }

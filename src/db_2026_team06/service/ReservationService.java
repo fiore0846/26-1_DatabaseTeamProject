@@ -35,7 +35,7 @@ public class ReservationService {
 
         try {
             if (!reservationDAO.checkAvailability(roomNumber, checkIn, checkOut)) {
-                return -2; // -2 = 중복 예약 (예약 불가)
+                return -2;
             }
         } catch (Exception e) {
             System.err.println("[오류] 중복 예약 확인 중 문제 발생: " + e.getMessage());
@@ -95,7 +95,7 @@ public class ReservationService {
     }
 
     /**
-     * [GUI 마이페이지용] 특정 고객의 예약 내역 목록을 반환합니다.
+     * 특정 고객의 예약 내역 목록을 반환합니다.
      */
     public List<String[]> getReservationsByCustomerId(int customerId) {
         return reservationDAO.findReservationsByCustomerId(customerId);

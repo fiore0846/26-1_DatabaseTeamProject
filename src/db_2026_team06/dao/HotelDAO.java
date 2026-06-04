@@ -9,6 +9,12 @@ import java.util.List;
 
 /**
  * Hotel 테이블에 대한 데이터 접근 객체(DAO)
+ *
+ * 프로젝트 요구사항 대응:
+ * - 인덱스 활용  (요구사항 7번)  : searchHotelsByLocation() 등 - location 컬럼 등에 생성된 인덱스를 활용하여 검색 최적화
+ * - 부속질의     (요구사항 10번) : findHotelsAboveAvgRating() - 전체 리뷰의 평균 평점 이상을 계산하기 위해 WHERE 절과 HAVING 절에 중첩 서브쿼리(Subquery) 활용
+ * - 동적 쿼리    (요구사항 12번) : searchHotelsByLocation(), findHotelById() - 사용자로부터 입력받은 값을 PreparedStatement 매개변수(?)로 바인딩하여 동적으로 쿼리 생성
+ * - Select       (요구사항 17번) : findAllHotels(), findHotelById(), searchHotelsByLocation(), findHotelsAboveAvgRating() 등 전체 기능
  */
 public class HotelDAO {
 

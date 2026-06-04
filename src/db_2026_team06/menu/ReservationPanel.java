@@ -21,8 +21,6 @@ import java.util.List;
  *
  * 구현된 기능:
  * - Insert : 예약 생성 (트랜잭션 포함)
- * - Update : 예약 날짜/인원 수정
- * - Delete : 예약 취소
  * - Select : 예약 가능 룸 조회, 예약 결과 조회 (뷰 사용)
  */
 public class ReservationPanel extends JPanel {
@@ -323,9 +321,29 @@ public class ReservationPanel extends JPanel {
             return;
         }
 
-        // 예약 성공 시 팝업 및 상태 초기화 진행
-        JOptionPane.showMessageDialog(this, "🎉 예약이 성공적으로 완료되었습니다!", "예약 성공", JOptionPane.INFORMATION_MESSAGE);
+        // 뷰(View)를 활용한 예약 상세 정보 조회 로직 (요구사항 view)
+        String[] detail = reservationService.getReservationDetail(result);
+        if (detail != null) {
+            String priceStr = roomTableModel.getValueAt(selectedRow, 2).toString().replace(",", "");
+            int pricePerNight = Integer.parseInt(priceStr);
+            int totalPrice = reservationService.calcTotalPrice(pricePerNight, checkIn, checkOut);
 
+            String successMessage =
+                      "╔══════════════════════════╗\n" +
+                      "   🎉 예약이 성공적으로 완료되었습니다!\n" +
+                      "╚══════════════════════════╝\n" +
+                      "  예약 ID   : " + result        + "\n" +
+                      "  호텔명    : " + detail[0]      + "\n" +
+                      "  룸 유형   : " + detail[1]      + "\n" +
+                      "  체크인    : " + detail[2]      + "\n" +
+                      "  체크아웃  : " + detail[3]      + "\n" +
+                      "  인원      : " + detail[4] + "명\n" +
+                      "  총 요금   : " + String.format("%,d", totalPrice) + "원\n" +
+                      "  예약자    : " + detail[6] + "\n\n" +
+                      "▶ 확인을 누르시면 호텔 탐색 화면으로 이동합니다.";
+
+            JOptionPane.showMessageDialog(this, successMessage, "예약 성공", JOptionPane.INFORMATION_MESSAGE);
+        }
         // 입력 필드 및 테이블 초기화
         tfCheckIn.setText("");
         tfCheckOut.setText("");
@@ -333,7 +351,6 @@ public class ReservationPanel extends JPanel {
         roomTableModel.setRowCount(0);
         taResult.setText("예약 대기 상태입니다.");
 
-        // 완료 후 콜백 실행을 통해 마이페이지로 자동 이동
         if (reservationSuccessListener != null) {
             reservationSuccessListener.run();
         }
@@ -392,7 +409,7 @@ public class ReservationPanel extends JPanel {
     }
 
     /**
-     * 예약 성공 시 마이페이지 이동 등 추가 동작을 위한 콜백 등록
+     * 예약 성공 시 이동 등 추가 동작을 위한 콜백 등록
      */
     public void setReservationSuccessListener(Runnable listener) {
         this.reservationSuccessListener = listener;

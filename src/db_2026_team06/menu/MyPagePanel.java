@@ -11,8 +11,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * 마이페이지 패널
- * 고객의 예약 내역을 조회(Select), 수정(Update), 취소(Delete)하는 통합 관리 화면입니다.
+ * 고객의 개인 예약 내역을 통합 관리하는 마이페이지 UI 패널입니다.
+ * 예약 목록 조회(Select), 예약 수정(Update), 예약 취소(Delete) 기능을 제공합니다.
  */
 public class MyPagePanel extends JPanel {
 
@@ -22,6 +22,10 @@ public class MyPagePanel extends JPanel {
     private DefaultTableModel tableModel;
     private JTable reservationTable;
 
+    /**
+     * MyPagePanel 생성자
+     * 서비스 계층 객체를 주입받고 레이아웃을 초기화합니다.
+     */
     public MyPagePanel(ReservationService reservationService) {
         this.reservationService = reservationService;
         setLayout(new BorderLayout(10, 10));
@@ -30,19 +34,23 @@ public class MyPagePanel extends JPanel {
         initComponents();
     }
 
-    // 마이페이지 진입 시 호출하여 로그인된 유저 정보를 세팅하고 표를 새로고침합니다.
+    /**
+     * 현재 로그인된 고객 세션을 등록하고, 해당 고객의 예약 데이터를 화면에 로드합니다.
+     * @param customer 세션에 보관된 현재 로그인 유저
+     */
     public void setLoggedInCustomer(Customer customer) {
         this.loggedInCustomer = customer;
         refreshTableData();
     }
 
+    /**
+     * 마이페이지 화면의 상단 타이틀, 데이터 출력용 테이블 뷰, 그리고 하단 제어 버튼 영역을 구성합니다.
+     */
     private void initComponents() {
-        // 상단 타이틀
         JLabel titleLabel = new JLabel("내 예약 관리 (마이페이지)");
         titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 24));
         add(titleLabel, BorderLayout.NORTH);
 
-        // 중앙 테이블 (예약 내역 출력)
         String[] columns = {"예약 번호", "객실 번호", "객실 유형", "인원", "체크인", "체크아웃", "예약일"};
         tableModel = new DefaultTableModel(columns, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
@@ -55,7 +63,6 @@ public class MyPagePanel extends JPanel {
         JScrollPane scrollPane = new JScrollPane(reservationTable);
         add(scrollPane, BorderLayout.CENTER);
 
-        // 하단 버튼 영역
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         buttonPanel.setBackground(Color.WHITE);
 
@@ -73,7 +80,9 @@ public class MyPagePanel extends JPanel {
         add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    // 예약 내역 갱신 (Select)
+    /**
+     * 데이터베이스에서 최신 예약 내역을 조회(Select)하여 UI 테이블을 갱신합니다.
+     */
     private void refreshTableData() {
         tableModel.setRowCount(0);
         if (loggedInCustomer == null) return;
@@ -84,7 +93,9 @@ public class MyPagePanel extends JPanel {
         }
     }
 
-    // 예약 취소 (Delete)
+    /**
+     * 사용자가 선택한 예약 건에 대해 데이터베이스 삭제(Delete) 작업을 요청합니다.
+     */
     private void cancelReservation() {
         int selectedRow = reservationTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -99,14 +110,16 @@ public class MyPagePanel extends JPanel {
             boolean success = reservationService.cancelReservation(reservationId);
             if (success) {
                 JOptionPane.showMessageDialog(this, "예약이 성공적으로 취소되었습니다.");
-                refreshTableData(); // 삭제 후 표 새로고침
+                refreshTableData();
             } else {
                 JOptionPane.showMessageDialog(this, "예약 취소에 실패했습니다.", "오류", JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
-    // 예약 수정 (Update)
+    /**
+     * 사용자가 선택한 예약 건의 체크인, 체크아웃 날짜 및 인원수를 수정(Update) 요청합니다.
+     */
     private void updateReservation() {
         int selectedRow = reservationTable.getSelectedRow();
         if (selectedRow == -1) {
@@ -119,7 +132,6 @@ public class MyPagePanel extends JPanel {
         String currentCheckOut = (String) tableModel.getValueAt(selectedRow, 5);
         String currentGuests = (String) tableModel.getValueAt(selectedRow, 3);
 
-        // 수정 입력창 띄우기
         JTextField txtCheckIn = new JTextField(currentCheckIn);
         JTextField txtCheckOut = new JTextField(currentCheckOut);
         JTextField txtGuests = new JTextField(currentGuests);
@@ -140,7 +152,7 @@ public class MyPagePanel extends JPanel {
                 boolean success = reservationService.updateReservation(reservationId, checkIn, checkOut, guests);
                 if (success) {
                     JOptionPane.showMessageDialog(this, "예약이 성공적으로 수정되었습니다.");
-                    refreshTableData(); // 수정 후 표 새로고침
+                    refreshTableData();
                 } else {
                     JOptionPane.showMessageDialog(this, "날짜가 유효하지 않거나 수정에 실패했습니다.");
                 }

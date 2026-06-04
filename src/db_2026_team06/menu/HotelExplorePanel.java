@@ -126,7 +126,6 @@ public class HotelExplorePanel extends JPanel {
         mapPanel.setHotelSelectListener(hotelId ->
                 detailPanel.showHotelDetail(hotelId));
 
-        // [수정] 컴파일러가 헷갈리지 않도록 (HotelDetailPanel.ReservationListener)로 명시적 형변환을 해줍니다!
         detailPanel.setReservationListener((HotelDetailPanel.ReservationListener) hotelId -> {
 
             // 로그인이 되어 있지 않으면 경고창을 띄우고 진입을 차단합니다.
@@ -134,7 +133,7 @@ public class HotelExplorePanel extends JPanel {
                 JOptionPane.showMessageDialog(this,
                         "예약 기능을 사용하려면 로그인이 필요합니다.\n우측 상단의 [로그인] 버튼을 이용해 주세요.",
                         "권한 없음", JOptionPane.WARNING_MESSAGE);
-                return; // 여기서 흐름을 강제로 끊습니다.
+                return;
             }
 
             // 정상적으로 로그인된 경우에만 메인 프레임에 전환 신호를 보냅니다.

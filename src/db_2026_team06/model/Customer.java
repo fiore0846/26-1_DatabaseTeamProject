@@ -1,5 +1,9 @@
 package db_2026_team06.model;
 
+/**
+ * Customer 테이블에 대응하는 DTO 클래스
+ * 서비스를 사용하는 고객의 정보를 담습니다.
+ */
 public class Customer {
     private int customerId;
     private String name;

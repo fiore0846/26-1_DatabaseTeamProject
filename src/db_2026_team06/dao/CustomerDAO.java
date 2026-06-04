@@ -4,8 +4,10 @@ import db_2026_team06.model.Customer;
 import db_2026_team06.util.DBConnection;
 import java.sql.*;
 
+    /*insert와 update 구현*/
+
 public class CustomerDAO {
-    //이메일이 존재하는지 확인하는 함수
+    //회원가입 시 이메일이 존재하는지 확인하는 함수
     public boolean checkEmailExists(String email) {
         String sql = "SELECT COUNT(*) FROM Customer WHERE email = ?";
         try (Connection conn = DBConnection.getConnection();
@@ -23,7 +25,7 @@ public class CustomerDAO {
         return false;
     }
 
-    // 회원가입
+    // 회원가입 시 고객을 테이블에 추가
     public boolean insertCustomer(String name, String email, String phone, String password) {
         String sql = "INSERT INTO Customer (name, email, phone, password) VALUES (?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();

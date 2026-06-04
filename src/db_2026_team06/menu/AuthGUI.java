@@ -4,6 +4,11 @@ import db_2026_team06.service.AuthService;
 import javax.swing.*;
 import java.awt.*;
 
+/**
+ * 사용자 인증을 처리하는 GUI 프레임입니다.
+ * 로그인, 회원가입, 비밀번호 변경 화면을 카드 레이아웃으로 관리하며,
+ * 인증 완료 시 MainFrame으로 제어권을 넘깁니다.
+ */
 public class AuthGUI extends JFrame {
     private AuthService authService;
     private CardLayout cardLayout;
@@ -17,20 +22,23 @@ public class AuthGUI extends JFrame {
     private JTextField regPhoneField;
     private JPasswordField regPasswordField;
 
-    // 이메일 중복 검사 통과 여부를 저장
     private boolean isEmailVerified = false;
     private String verifiedEmail = "";
 
     private JTextField chgEmailField;
-    private JPasswordField chgOldPasswordField; // 기존 비밀번호 입력창
-    private JPasswordField chgNewPasswordField; // 새 비밀번호 입력창
+    private JPasswordField chgOldPasswordField;
+    private JPasswordField chgNewPasswordField;
 
+    /**
+     * AuthGUI 생성자
+     * 인증 프레임의 기본 설정 및 레이아웃을 초기화합니다.
+     */
     public AuthGUI() {
         this.authService = new AuthService();
 
         setTitle("MIRICOM 호텔 예약 시스템 - 인증");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(400, 550); // 창 크기를 조금 넉넉하게 조정
+        setSize(400, 550);
         setLocationRelativeTo(null);
 
         cardLayout = new CardLayout();
@@ -44,6 +52,10 @@ public class AuthGUI extends JFrame {
         cardLayout.show(mainPanel, "Login");
     }
 
+    /**
+     * 로그인 화면 패널을 구성합니다.
+     * @return 초기화된 로그인 JPanel 객체
+     */
     private JPanel createLoginPanel() {
         JPanel panel = new JPanel(new GridLayout(6, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
@@ -65,7 +77,6 @@ public class AuthGUI extends JFrame {
         panel.add(new JLabel("비밀번호:"));
         panel.add(loginPasswordField);
 
-        // 4개의 버튼을 배치하기 위해 2x2 그리드로 레이아웃 설정
         JPanel btnPanel = new JPanel(new GridLayout(2, 2, 5, 5));
         btnPanel.add(loginButton);
         btnPanel.add(toRegButton);
@@ -77,7 +88,6 @@ public class AuthGUI extends JFrame {
         toRegButton.addActionListener(e -> cardLayout.show(mainPanel, "Register"));
         toChgButton.addActionListener(e -> cardLayout.show(mainPanel, "ChangePassword"));
 
-        // 비회원 상태(null)로 메인 프레임을 호출하여 탐색 화면으로 이동
         toExploreButton.addActionListener(e -> {
             MainFrame mainFrame = new MainFrame(null);
             mainFrame.setVisible(true);
@@ -87,6 +97,10 @@ public class AuthGUI extends JFrame {
         return panel;
     }
 
+    /**
+     * 회원가입 화면 패널을 구성합니다.
+     * @return 초기화된 회원가입 JPanel 객체
+     */
     private JPanel createRegisterPanel() {
         JPanel panel = new JPanel(new GridLayout(11, 1, 5, 5));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
@@ -97,7 +111,6 @@ public class AuthGUI extends JFrame {
         regNameField = new JTextField();
         regEmailField = new JTextField();
 
-        // 이메일 입력창 옆에 중복검사 버튼
         JPanel emailInputPanel = new JPanel(new BorderLayout(5, 0));
         JButton checkEmailBtn = new JButton("중복 확인");
         emailInputPanel.add(regEmailField, BorderLayout.CENTER);
@@ -132,6 +145,10 @@ public class AuthGUI extends JFrame {
         return panel;
     }
 
+    /**
+     * 비밀번호 변경 화면 패널을 구성합니다.
+     * @return 초기화된 비밀번호 변경 JPanel 객체
+     */
     private JPanel createChangePasswordPanel() {
         JPanel panel = new JPanel(new GridLayout(9, 1, 10, 10));
         panel.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
@@ -140,8 +157,8 @@ public class AuthGUI extends JFrame {
         titleLabel.setFont(new Font("맑은 고딕", Font.BOLD, 20));
 
         chgEmailField = new JTextField();
-        chgOldPasswordField = new JPasswordField(); // 기존 비밀번호
-        chgNewPasswordField = new JPasswordField(); // 새 비밀번호
+        chgOldPasswordField = new JPasswordField();
+        chgNewPasswordField = new JPasswordField();
 
         JButton chgButton = new JButton("변경 완료");
         JButton backButton = new JButton("취소 (로그인으로)");
@@ -165,8 +182,9 @@ public class AuthGUI extends JFrame {
         return panel;
     }
 
-    // 기능 로직
-
+    /**
+     * 로그인 요청을 처리하고, 성공 시 세션을 포함하여 MainFrame을 실행합니다.
+     */
     private void handleLogin() {
         String email = loginEmailField.getText().trim();
         String password = new String(loginPasswordField.getPassword());
@@ -174,17 +192,18 @@ public class AuthGUI extends JFrame {
         if (authService.login(email, password)) {
             JOptionPane.showMessageDialog(this, authService.getLoggedInCustomer().getName() + "님, 환영합니다!", "성공", JOptionPane.INFORMATION_MESSAGE);
 
-            // 로그인 성공 시 MainFrame을 생성하고 사용자 정보를 전달하여 화면을 띄웁니다.
             MainFrame mainFrame = new MainFrame(authService.getLoggedInCustomer());
             mainFrame.setVisible(true);
 
-            this.dispose(); // 기존 로그인 창 닫기
+            this.dispose();
         } else {
             JOptionPane.showMessageDialog(this, "이메일 또는 비밀번호를 다시 확인해주세요.", "오류", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    // 중복 확인 로직
+    /**
+     * 회원가입 전 이메일 중복 검사를 수행합니다.
+     */
     private void handleEmailDuplicateCheck() {
         String email = regEmailField.getText().trim();
 
@@ -199,10 +218,13 @@ public class AuthGUI extends JFrame {
         } else {
             JOptionPane.showMessageDialog(this, "사용 가능한 이메일입니다!", "확인 완료", JOptionPane.INFORMATION_MESSAGE);
             isEmailVerified = true;
-            verifiedEmail = email; // 인증받은 이메일을 저장
+            verifiedEmail = email;
         }
     }
 
+    /**
+     * 입력된 정보를 바탕으로 데이터베이스에 신규 고객을 등록합니다.
+     */
     private void handleRegister() {
         String name = regNameField.getText().trim();
         String email = regEmailField.getText().trim();
@@ -214,7 +236,6 @@ public class AuthGUI extends JFrame {
             return;
         }
 
-        // 중복 확인을 안 했거나, 중복 확인을 한 후 이메일을 수정해버린 경우 예외 처리
         if (!isEmailVerified || !email.equals(verifiedEmail)) {
             JOptionPane.showMessageDialog(this, "이메일 중복 확인을 완료해 주세요.", "알림", JOptionPane.WARNING_MESSAGE);
             return;
@@ -229,6 +250,9 @@ public class AuthGUI extends JFrame {
         }
     }
 
+    /**
+     * 사용자 인증 후 데이터베이스의 비밀번호를 업데이트합니다.
+     */
     private void handleChangePassword() {
         String email = chgEmailField.getText().trim();
         String oldPassword = new String(chgOldPasswordField.getPassword());
@@ -239,7 +263,6 @@ public class AuthGUI extends JFrame {
             return;
         }
 
-        // oldPassword 값도 함께 검증 파라미터로 넘겨서 확인
         if (authService.changePassword(email, oldPassword, newPassword)) {
             JOptionPane.showMessageDialog(this, "비밀번호가 성공적으로 변경되었습니다.", "성공", JOptionPane.INFORMATION_MESSAGE);
             cardLayout.show(mainPanel, "Login");
@@ -249,6 +272,7 @@ public class AuthGUI extends JFrame {
         }
     }
 
+    /** 회원가입 입력 폼을 초기화합니다. */
     private void clearRegisterFields() {
         regNameField.setText("");
         regEmailField.setText("");
@@ -258,6 +282,7 @@ public class AuthGUI extends JFrame {
         verifiedEmail = "";
     }
 
+    /** 비밀번호 변경 입력 폼을 초기화합니다. */
     private void clearChangeFields() {
         chgEmailField.setText("");
         chgOldPasswordField.setText("");
