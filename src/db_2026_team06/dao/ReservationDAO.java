@@ -84,14 +84,16 @@ public class ReservationDAO {
 			pstmt1.setInt(4, reservation.getGuests());
 			pstmt1.setInt(5, roomNumber);
 			pstmt1.setInt(6, customerId);
+			pstmt1.executeUpdate();
 			
 			PreparedStatement pstmt2 = conn.prepareStatement(sql2);
 			pstmt2.setInt(1, customerId);
 			pstmt2.setInt(2, roomNumber);
 			pstmt2.setDate(3, reservationDate);
 			ResultSet rs = pstmt2.executeQuery();
-			int reservationId = rs.getInt(0);
-			return reservationId;
+			if (rs.next()) {
+			    return rs.getInt("reservation_id");
+			}
 		} catch (SQLException e) {
 			System.out.println("DB연결 실패하거나, SQL문이 틀렸습니다.");
 			System.out.print("사유 : " + e.getMessage());
@@ -99,15 +101,15 @@ public class ReservationDAO {
 		}
 	}
 	
-	public String[] viewReservation(int customerId) throws Exception {
+	public String[] viewReservation(int reservationId) throws Exception {
 		//예약 확인
 		String sql = "SELECT customerId, reservationId, customer_name, room_number, room_type, price_per_night, guests, check_in, check_out, reservation_date"
-				+ " FROM vReservationDetail WHERE customerId = ?";
+				+ " FROM vReservationDetail WHERE reservationId = ?";
 		
 		try {
 			Connection conn = DBConnection.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql);
-			pstmt.setInt(1, customerId);
+			pstmt.setInt(1, reservationId);
 			ResultSet rs = pstmt.executeQuery();
 			
 			boolean hasReservation = false;

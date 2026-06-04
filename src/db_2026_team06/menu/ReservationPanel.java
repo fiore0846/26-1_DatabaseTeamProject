@@ -102,7 +102,7 @@ public class ReservationPanel extends JPanel {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setFont(new Font("맑은 고딕", Font.BOLD, 13));
         tabs.addTab("예약 생성", buildCreateTab());
-        tabs.addTab("예약 수정 / 취소", buildManageTab());
+        tabs.addTab("예약 취소", buildManageTab());
         return tabs;
     }
 
@@ -253,7 +253,7 @@ public class ReservationPanel extends JPanel {
         g.gridx=1; g.gridwidth=3;
         tfReservationId = new JTextField(10); tfReservationId.setFont(vf);
         panel.add(tfReservationId, g);
-
+/*
         // 새 체크인
         g.gridwidth=1;
         g.gridx=0; g.gridy=1; panel.add(lbl("새 체크인 (YYYY-MM-DD)", lf), g);
@@ -276,7 +276,7 @@ public class ReservationPanel extends JPanel {
         btnUpdate.addActionListener(e ->
             onUpdateReservation(tfReservationId, tfNewCheckIn, tfNewCheckOut, spNewGuests));
         panel.add(btnUpdate, g);
-
+*/
         // 취소 버튼
         g.gridx=3;
         JButton btnCancel = makeBtn("예약 취소", new Color(200,50,50));
