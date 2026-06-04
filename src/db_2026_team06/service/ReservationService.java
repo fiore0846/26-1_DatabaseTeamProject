@@ -54,8 +54,8 @@ public class ReservationService {
 		}
 	}
 	
-	public String[] getReservationDetail(int reservationId) throws Exception {
-		return reservationDAO.viewReservation(reservationId);
+	public String[] getReservationDetail(int customerId) throws Exception {
+		return reservationDAO.viewReservation(customerId);
 	}
 	
 	public int calcTotalPrice(int pricePerNight, LocalDate checkIn, LocalDate checkOut) {
