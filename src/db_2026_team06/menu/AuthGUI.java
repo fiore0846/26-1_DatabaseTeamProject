@@ -36,7 +36,7 @@ public class AuthGUI extends JFrame {
     public AuthGUI() {
         this.authService = new AuthService();
 
-        setTitle("MIRICOM 호텔 예약 시스템 - 인증");
+        setTitle("호텔 예약 시스템 - 인증");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 550);
         setLocationRelativeTo(null);
