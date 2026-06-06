@@ -5,6 +5,7 @@ package db_2026_team06.model;
  * 호텔 객실의 유형, 가격, 수용 인원 정보를 담습니다.
  */
 public class Room {
+    private int roomId;
     private int roomNumber;
     private String type;
     private int pricePerNight;
@@ -13,7 +14,8 @@ public class Room {
 
     public Room() {}
 
-    public Room(int roomNumber, String type, int pricePerNight, int capacity, int hotelId) {
+    public Room(int roomId, int roomNumber, String type, int pricePerNight, int capacity, int hotelId) {
+        this.roomId         = roomId;
         this.roomNumber     = roomNumber;
         this.type           = type;
         this.pricePerNight  = pricePerNight;
@@ -22,6 +24,9 @@ public class Room {
     }
 
     // ── Getters & Setters ──────────────────────────────────────────────
+
+    public int getRoomId()                  { return roomId; }
+    public void setRoomId(int roomId)       { this.roomId = roomId; }
 
     public int getRoomNumber()              { return roomNumber; }
     public void setRoomNumber(int v)        { this.roomNumber = v; }

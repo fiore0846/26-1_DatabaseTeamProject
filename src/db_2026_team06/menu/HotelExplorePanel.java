@@ -136,6 +136,14 @@ public class HotelExplorePanel extends JPanel {
                 return;
             }
 
+            // 호텔이 선택되어있지 않으면 진입을 차단합니다.
+            if (hotelId <= 0) {
+                JOptionPane.showMessageDialog(this,
+                        "먼저 지도를 클릭하여 예약할 호텔을 선택해주세요.",
+                        "안내", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+
             // 정상적으로 로그인된 경우에만 메인 프레임에 전환 신호를 보냅니다.
             if (reservationListener != null) {
                 reservationListener.onReservationRequested(hotelId);

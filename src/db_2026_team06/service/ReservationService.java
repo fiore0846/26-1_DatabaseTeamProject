@@ -30,20 +30,16 @@ public class ReservationService {
      * 예약을 생성합니다. (트랜잭션)
      * @return 생성된 reservation_id, 실패 시 -1
      */
-    public int createReservation(Customer customer, int roomNumber,
-                                 LocalDate checkIn, LocalDate checkOut, int guests) {
-
+    public int createReservation(Customer customer, int roomId, LocalDate checkIn, LocalDate checkOut, int guests) {
         try {
-            if (!reservationDAO.checkAvailability(roomNumber, checkIn, checkOut)) {
+            if (!reservationDAO.checkAvailability(roomId, checkIn, checkOut)) {
                 return -2;
             }
+            return reservationDAO.createReservation(customer, roomId, checkIn, checkOut, guests);
         } catch (Exception e) {
-            System.err.println("[오류] 중복 예약 확인 중 문제 발생: " + e.getMessage());
+            e.printStackTrace();
             return -1;
         }
-
-        // 중복 검사를 무사히 통과했다면 DAO에 예약 생성을 요청합니다.
-        return reservationDAO.createReservation(customer, roomNumber, checkIn, checkOut, guests);
     }
 
     /**

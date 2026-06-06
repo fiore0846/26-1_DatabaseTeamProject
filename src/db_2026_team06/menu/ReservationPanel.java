@@ -31,6 +31,9 @@ public class ReservationPanel extends JPanel {
     // 현재 시스템에 로그인되어 인증을 마친 사용자 세션 객체를 보관합니다.
     private Customer loggedInCustomer;
 
+    // 현재 화면에 띄워지는 룸 목록을 기억합니다.
+    private List<Room> currentAvailableRooms;
+
     // 현재 선택된 호텔 ID (HotelExplorePanel에서 전달받음)
     private int targetHotelId = -1;
 
@@ -252,16 +255,14 @@ public class ReservationPanel extends JPanel {
         }
 
         int guests = (int) spGuests.getValue();
-        List<Room> rooms = reservationService.getAvailableRooms(
+        currentAvailableRooms = reservationService.getAvailableRooms(
                 targetHotelId, checkIn, checkOut, guests);
 
         roomTableModel.setRowCount(0);
-        if (rooms.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "선택한 조건에 예약 가능한 룸이 없습니다.", "조회 결과",
-                    JOptionPane.INFORMATION_MESSAGE);
+        if (currentAvailableRooms.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "선택한 조건에 예약 가능한 룸이 없습니다.", "조회 결과", JOptionPane.INFORMATION_MESSAGE);
         } else {
-            for (Room r : rooms) {
+            for (Room r : currentAvailableRooms) {
                 roomTableModel.addRow(new Object[]{
                         r.getRoomNumber(),
                         r.getType(),
@@ -281,7 +282,7 @@ public class ReservationPanel extends JPanel {
                     "룸을 선택해주세요.", "안내", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        int roomNumber = (int) roomTableModel.getValueAt(selectedRow, 0);
+        int roomId = currentAvailableRooms.get(selectedRow).getRoomId();
 
         // 날짜 파싱
         LocalDate checkIn, checkOut;
@@ -307,7 +308,7 @@ public class ReservationPanel extends JPanel {
 
         // 예약 생성 (트랜잭션)
         int result = reservationService.createReservation(
-                customer, roomNumber, checkIn, checkOut, guests);
+                customer, roomId, checkIn, checkOut, guests);
 
         if (result == -2) {
             JOptionPane.showMessageDialog(this,

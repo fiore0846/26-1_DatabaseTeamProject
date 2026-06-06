@@ -151,7 +151,7 @@ public class HotelDetailPanel extends JPanel {
             } else if (reservationListener != null) {
                 reservationListener.accept(hotelId);
             } else {
-                JOptionPane.showMessageDialog(this, "예약 화면으로 이동합니다.\nhotel_id: " + hotelId);
+                JOptionPane.showMessageDialog(SwingUtilities.getWindowAncestor(this), "예약 화면으로 이동합니다.\nhotel_id: " + hotelId);
             }
         });
 

@@ -43,16 +43,15 @@ public class ReservationDAO {
      * @param guests   인원 수
      * @return 예약 가능한 Room 리스트
      */
-    public List<Room> findAvailableRooms(int hotelId, LocalDate checkIn,
-                                         LocalDate checkOut, int guests) {
+    public List<Room> findAvailableRooms(int hotelId, LocalDate checkIn, LocalDate checkOut, int guests) {
         List<Room> list = new ArrayList<>();
-        String sql = "SELECT r.room_number, r.type, r.price_per_night, r.capacity, r.hotel_id "
+        String sql = "SELECT r.room_id, r.room_number, r.type, r.price_per_night, r.capacity, r.hotel_id "
                 + "FROM Room r "
                 + "INNER JOIN Hotel h ON r.hotel_id = h.hotel_id "
                 + "WHERE r.hotel_id = ? "
                 + "  AND r.capacity >= ? "
-                + "  AND r.room_number NOT IN ( "
-                + "      SELECT room_number FROM Reservation "
+                + "  AND r.room_id NOT IN ( "
+                + "      SELECT room_id FROM Reservation "
                 + "      WHERE NOT (check_out <= ? OR check_in >= ?) "
                 + "  ) "
                 + "ORDER BY r.price_per_night";
@@ -65,6 +64,7 @@ public class ReservationDAO {
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(new Room(
+                            rs.getInt("room_id"),
                             rs.getInt("room_number"),
                             rs.getString("type"),
                             rs.getInt("price_per_night"),
@@ -82,19 +82,18 @@ public class ReservationDAO {
     // 예약 가능 여부 확인 (날짜가 겹치는 예약이 있는지 체크)
     public boolean checkAvailability(int roomId, LocalDate checkIn, LocalDate checkOut) throws Exception {
         String sql = "SELECT COUNT(*) FROM Reservation "
-                + "WHERE room_number = ? AND (check_in <= ? AND check_out >= ?)";
+                + "WHERE room_id = ? AND (check_in <= ? AND check_out >= ?)";
 
         try {
             Connection conn = DBConnection.getConnection();
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            // sql문에 입력값 넣어 동적으로 조회
             pstmt.setInt(1, roomId);
             pstmt.setDate(2, Date.valueOf(checkOut));
             pstmt.setDate(3, Date.valueOf(checkIn));
 
             ResultSet rs = pstmt.executeQuery();
             rs.next();
-            return rs.getInt(1) == 0; //0이면 예약 가능 -> true 반환
+            return rs.getInt(1) == 0;
         } catch (SQLException e){
             System.out.println("DB연결 실패하거나, SQL문이 틀렸습니다.");
             System.out.print("사유 : " + e.getMessage());
@@ -138,8 +137,7 @@ public class ReservationDAO {
      * GUI 예약 시스템에서 호출되는 메서드로, 고객 정보 저장과 예약 생성을 하나의 트랜잭션으로 처리합니다.
      * 트랜잭션으로 묶어 둘 중 하나라도 실패하면 전체 롤백합니다.
      */
-    public int createReservation(Customer customer, int roomNumber,
-                                 LocalDate checkIn, LocalDate checkOut, int guests) {
+    public int createReservation(Customer customer, int roomId, LocalDate checkIn, LocalDate checkOut, int guests) {
         Connection conn = null;
         try {
             conn = DBConnection.getConnection();
@@ -148,7 +146,7 @@ public class ReservationDAO {
             int customerId = insertOrGetCustomer(conn, customer);
 
             String sql = "INSERT INTO Reservation "
-                    + "(check_in, check_out, reservation_date, guests, room_number, customer_id) "
+                    + "(check_in, check_out, reservation_date, guests, room_id, customer_id) "
                     + "VALUES (?, ?, ?, ?, ?, ?)";
             int reservationId = -1;
             try (PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -156,7 +154,7 @@ public class ReservationDAO {
                 pstmt.setDate(2, Date.valueOf(checkOut));
                 pstmt.setDate(3, Date.valueOf(LocalDate.now()));
                 pstmt.setInt (4, guests);
-                pstmt.setInt (5, roomNumber);
+                pstmt.setInt (5, roomId);
                 pstmt.setInt (6, customerId);
                 pstmt.executeUpdate();
 

@@ -19,11 +19,13 @@ CREATE TABLE Hotel (
 
 -- 2. Room 테이블 생성 (Hotel 참조)
 CREATE TABLE Room (
-    room_number INT PRIMARY KEY,
+    room_id INT PRIMARY KEY AUTO_INCREMENT,
+    room_number INT NOT NULL,
     type VARCHAR(255) NOT NULL,
     price_per_night INT NOT NULL,
     capacity INT NOT NULL,
     hotel_id INT NOT NULL,
+    UNIQUE (hotel_id, room_number),
     FOREIGN KEY (hotel_id) REFERENCES Hotel(hotel_id) ON DELETE CASCADE
 );
 
@@ -43,9 +45,9 @@ CREATE TABLE Reservation (
     check_out DATE NOT NULL,
     reservation_date DATE NOT NULL,
     guests INT NOT NULL,
-    room_number INT NOT NULL,
+    room_id INT NOT NULL,
     customer_id INT NOT NULL,
-    FOREIGN KEY (room_number) REFERENCES Room(room_number) ON DELETE CASCADE,
+    FOREIGN KEY (room_id) REFERENCES Room(room_id) ON DELETE CASCADE,
     FOREIGN KEY (customer_id) REFERENCES Customer(customer_id) ON DELETE CASCADE
 );
 
@@ -86,7 +88,7 @@ SELECT
     r.customer_id AS customerId,
     r.reservation_id AS reservationId,
     c.name AS customer_name,
-    r.room_number,
+    rm.room_number,
     rm.type AS room_type,
     rm.price_per_night,
     r.guests,
@@ -94,8 +96,8 @@ SELECT
     r.check_out,
     r.reservation_date
 FROM Reservation r
-JOIN Customer c ON r.customer_id = c.customer_id -- 예약 정보와 고객 정보 조인
-JOIN Room rm ON r.room_number = rm.room_number; -- 예약 정보와 룸 정보 조인
+JOIN Customer c ON r.customer_id = c.customer_id
+JOIN Room rm ON r.room_id = rm.room_id;
 
 
 -- 2. 호텔 평균 별점 뷰 (호텔 상세 페이지 연동용)
@@ -116,7 +118,7 @@ SELECT
     (DATEDIFF(rs.check_out, rs.check_in) * rm.price_per_night) AS total_price, 
     c.name AS customer_name
 FROM Reservation rs
-JOIN Room rm ON rs.room_number = rm.room_number
+JOIN Room rm ON rs.room_id = rm.room_id
 JOIN Hotel h ON rm.hotel_id = h.hotel_id
 JOIN Customer c ON rs.customer_id = c.customer_id;
 
@@ -134,7 +136,7 @@ CREATE INDEX idx_room_hotel_id ON Room(hotel_id);
 CREATE INDEX idx_review_hotel_id ON Review(hotel_id);
 
 -- 예약 룸 조회 성능 향상
-CREATE INDEX idx_reservation_room ON Reservation(room_number);
+CREATE INDEX idx_reservation_room ON Reservation(room_id);
 
 
 
@@ -144,17 +146,18 @@ INSERT INTO Hotel VALUES
 (2, '부산 오션 호텔', '부산 해운대구', '051-2222-2222', '해변 전망 호텔'),
 (3, '제주 리조트', '제주시 애월읍', '064-3333-3333', '휴양형 리조트');
 
+-- Room 데이터 삽입
 INSERT INTO Room VALUES
-(101, 'Standard', 120000, 2, 1),
-(102, 'Deluxe', 180000, 3, 1),
-(103, 'Suite', 280000, 4, 1),
+(1, 101, 'Standard', 120000, 2, 1),
+(2, 102, 'Deluxe', 180000, 3, 1),
+(3, 103, 'Suite', 280000, 4, 1),
 
-(201, 'Standard', 130000, 2, 2),
-(202, 'Deluxe', 200000, 3, 2),
-(203, 'Suite', 320000, 4, 2),
+(4, 201, 'Standard', 130000, 2, 2),
+(5, 202, 'Deluxe', 200000, 3, 2),
+(6, 203, 'Suite', 320000, 4, 2),
 
-(301, 'Standard', 140000, 2, 3),
-(302, 'Family', 260000, 5, 3);
+(7, 301, 'Standard', 140000, 2, 3),
+(8, 302, 'Family', 260000, 5, 3);
 
 INSERT INTO Customer VALUES
 (1, '김민준', 'minjun@gmail.com', 'pw1', '010-1111-1111'),
@@ -166,15 +169,16 @@ INSERT INTO Customer VALUES
 (7, '윤서준', 'seojun@gmail.com', 'pw7', '010-7777-7777'),
 (8, '강민서', 'minseo@gmail.com', 'pw8', '010-8888-8888');
 
+-- Reservation 데이터 삽입
 INSERT INTO Reservation VALUES
-(1,'2026-06-10','2026-06-12','2026-05-29',2,101,1),
-(2,'2026-06-15','2026-06-18','2026-05-28',3,102,2),
-(3,'2026-06-20','2026-06-22','2026-05-25',2,201,3),
-(4,'2026-07-01','2026-07-03','2026-05-30',4,203,4),
-(5,'2026-07-05','2026-07-07','2026-05-27',2,301,5),
-(6,'2026-07-10','2026-07-13','2026-05-26',5,302,6),
-(7,'2026-08-01','2026-08-03','2026-05-20',2,103,7),
-(8,'2026-08-15','2026-08-18','2026-05-18',3,202,8);
+(1,'2026-06-10','2026-06-12','2026-05-29',2,1,1),
+(2,'2026-06-15','2026-06-18','2026-05-28',3,2,2),
+(3,'2026-06-20','2026-06-22','2026-05-25',2,4,3),
+(4,'2026-07-01','2026-07-03','2026-05-30',4,6,4),
+(5,'2026-07-05','2026-07-07','2026-05-27',2,7,5),
+(6,'2026-07-10','2026-07-13','2026-05-26',5,8,6),
+(7,'2026-08-01','2026-08-03','2026-05-20',2,3,7),
+(8,'2026-08-15','2026-08-18','2026-05-18',3,5,8);
 
 INSERT INTO Attraction VALUES
 (1, '경복궁', '서울 대표 관광지'),
