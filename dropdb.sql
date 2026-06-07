@@ -1,0 +1,18 @@
+USE DB2026Team06;
+
+-- 뷰 삭제
+DROP VIEW IF EXISTS reservation_detail;
+DROP VIEW IF EXISTS hotel_avg_rating;
+DROP VIEW IF EXISTS vReservationDetail;
+
+-- 테이블 삭제
+DROP TABLE IF EXISTS Review;
+DROP TABLE IF EXISTS Hotel_Attraction;
+DROP TABLE IF EXISTS Attraction;
+DROP TABLE IF EXISTS Reservation;
+DROP TABLE IF EXISTS Customer;
+DROP TABLE IF EXISTS Room;
+DROP TABLE IF EXISTS Hotel;
+
+-- 데이터베이스 삭제
+DROP DATABASE IF EXISTS DB2026Team06;
